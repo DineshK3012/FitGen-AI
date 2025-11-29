@@ -1,0 +1,5 @@
+{
+  "name": "AI Fitness & Image Coach",
+  "description": "A comprehensive fitness assistant that generates workout and diet plans, featuring advanced AI image generation and editing capabilities using Gemini 2.5 Flash Image.",
+  "requestFramePermissions": []
+}
