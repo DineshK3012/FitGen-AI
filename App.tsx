@@ -7,6 +7,7 @@ import { Dashboard } from './pages/Dashboard';
 import { CreatePlan } from './pages/CreatePlan';
 import { PlanViewer } from './pages/PlanViewer';
 import { Settings } from './pages/Settings';
+import { Toaster } from 'sonner';
 
 const App: React.FC = () => {
   return (
@@ -22,6 +23,7 @@ const App: React.FC = () => {
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Layout>
+        <Toaster position="top-right" richColors closeButton />
       </HashRouter>
     </ThemeProvider>
   );

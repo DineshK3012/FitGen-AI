@@ -53,11 +53,8 @@ export const generateFitnessPlan = async (prefs: UserPreferences): Promise<Fitne
 
     // Sanitization
     text = text.trim();
-    if (text.startsWith('```json')) {
-      text = text.replace(/^```json\s*/, '').replace(/\s*```$/, '');
-    } else if (text.startsWith('```')) {
-      text = text.replace(/^```\s*/, '').replace(/\s*```$/, '');
-    }
+    // Remove markdown code blocks if present
+    text = text.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
 
     const data = JSON.parse(text);
     

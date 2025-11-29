@@ -1,11 +1,12 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { generateFitnessPlan, getDemoPlan } from '../services/geminiService';
 import { storageService } from '../services/storageService';
 import { UserPreferences, LoadingState } from '../types';
-import { Loader2, ArrowRight, ArrowLeft, Check, AlertCircle, Sparkles, PlayCircle } from 'lucide-react';
+import { Loader2, ArrowRight, ArrowLeft, Check, Sparkles, PlayCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRateLimit } from '../hooks/useRateLimit';
+import { toast } from 'sonner';
 
 const STEPS = [
   { id: 1, title: 'Personal Info' },
@@ -20,8 +21,10 @@ export const CreatePlan: React.FC = () => {
   const location = useLocation();
   const [currentStep, setCurrentStep] = useState(1);
   const [loading, setLoading] = useState(LoadingState.IDLE);
-  const [error, setError] = useState<string | null>(null);
   
+  // Rate Limit: 3 plans per 5 minutes to be safe on free tier
+  const { checkLimit } = useRateLimit('plan_gen', { limit: 3, interval: 300000 });
+
   const [formData, setFormData] = useState<UserPreferences>({
     name: '',
     age: 25,
@@ -39,17 +42,16 @@ export const CreatePlan: React.FC = () => {
     remarks: ''
   });
 
-  // Load preferences if passed via navigation (Regenerate flow)
   useEffect(() => {
     if (location.state && location.state.preferences) {
       setFormData(location.state.preferences);
-      // Optional: Jump to last step or verify data
+      toast.info("Preferences loaded. You can modify them before regenerating.");
     }
   }, [location.state]);
 
   const [validationErrors, setValidationErrors] = useState<Record<string, string>>({});
 
-  const validateStep = (step: number): boolean => {
+  const validateStep = useCallback((step: number): boolean => {
     const errors: Record<string, string> = {};
     let isValid = true;
 
@@ -67,11 +69,12 @@ export const CreatePlan: React.FC = () => {
     if (Object.keys(errors).length > 0) {
       setValidationErrors(errors);
       isValid = false;
+      toast.error("Please fix the errors before proceeding.");
     } else {
       setValidationErrors({});
     }
     return isValid;
-  };
+  }, [formData]);
 
   const handleNext = () => {
     if (validateStep(currentStep)) {
@@ -86,26 +89,39 @@ export const CreatePlan: React.FC = () => {
   const handleSubmit = async () => {
     if (!validateStep(3)) return;
 
+    if (!checkLimit()) return;
+
     setLoading(LoadingState.LOADING);
-    setError(null);
+    const toastId = toast.loading("Connecting to Gemini AI...");
 
     try {
       if (!storageService.getApiKey()) {
         throw new Error("Please set your Gemini API Key in Settings first.");
       }
+      
       const plan = await generateFitnessPlan(formData);
-      // Save as DRAFT (Temporary)
       storageService.saveDraftPlan(plan);
+      
       setLoading(LoadingState.SUCCESS);
+      toast.success("Plan generated successfully!", { id: toastId });
       navigate(`/plan/${plan.id}?draft=true`);
     } catch (err) {
       setLoading(LoadingState.ERROR);
-      setError(err instanceof Error ? err.message : "Failed to generate plan");
+      const msg = err instanceof Error ? err.message : "Failed to generate plan";
+      toast.error(msg, { 
+        id: toastId,
+        action: {
+          label: 'Use Demo',
+          onClick: handleDemoPlan
+        },
+        duration: 5000
+      });
     }
   };
 
   const handleDemoPlan = () => {
     setLoading(LoadingState.LOADING);
+    toast.loading("Loading demo plan...");
     setTimeout(() => {
       const demo = getDemoPlan();
       demo.id = crypto.randomUUID(); 
@@ -113,6 +129,8 @@ export const CreatePlan: React.FC = () => {
       demo.userName = formData.name || 'Demo User';
       storageService.saveDraftPlan(demo);
       setLoading(LoadingState.SUCCESS);
+      toast.dismiss();
+      toast.success("Demo plan loaded!");
       navigate(`/plan/${demo.id}?draft=true`);
     }, 1000);
   };
@@ -184,25 +202,7 @@ export const CreatePlan: React.FC = () => {
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-slate-200 dark:border-slate-800 p-8 md:p-12 transition-colors">
-        {error && (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 p-4 rounded-xl mb-8">
-            <div className="flex items-start gap-3">
-              <AlertCircle size={20} className="mt-0.5 flex-shrink-0" />
-              <div className="flex-1">
-                <p className="font-semibold mb-1">Error Generating Plan</p>
-                <p className="text-sm mb-3">{error}</p>
-                <button 
-                  onClick={handleDemoPlan}
-                  className="text-sm font-medium bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300 px-3 py-1.5 rounded-lg flex items-center gap-2 hover:bg-red-200 dark:hover:bg-red-900/60 transition-colors"
-                >
-                  <PlayCircle size={14} />
-                  Load Demo Plan Instead
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
+        
         <AnimatePresence mode="wait">
           {currentStep === 1 && (
             <motion.div

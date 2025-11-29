@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { storageService } from '../services/storageService';
 import { ArrowLeft, Key, Save, AlertCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export const Settings: React.FC = () => {
   const [apiKey, setApiKey] = useState('');
@@ -16,6 +17,7 @@ export const Settings: React.FC = () => {
   const handleSave = () => {
     storageService.setApiKey(apiKey);
     setSaved(true);
+    toast.success('API Key saved successfully!');
     setTimeout(() => setSaved(false), 2000);
   };
 

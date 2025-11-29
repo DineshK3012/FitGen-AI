@@ -1,11 +1,12 @@
-
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback, useMemo } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FitnessPlan, AlternativeOption } from '../types';
 import { storageService } from '../services/storageService';
 import { getAlternatives } from '../services/geminiService';
 import { AIImageEditor } from '../components/AIImageEditor';
 import { ArrowLeft, Clock, Flame, Dumbbell, Utensils, Printer, RefreshCw, AlertTriangle, FileQuestion, Save, Shuffle, Volume2, X, Check, Loader2, User, Info, Square, Trash2 } from 'lucide-react';
+import { useRateLimit } from '../hooks/useRateLimit';
+import { toast } from 'sonner';
 
 export const PlanViewer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -28,6 +29,9 @@ export const PlanViewer: React.FC = () => {
   const [subLoading, setSubLoading] = useState(false);
   const [subOptions, setSubOptions] = useState<AlternativeOption[]>([]);
 
+  // Rate Limiter for alternatives: 10 per 2 minutes
+  const { checkLimit: checkAltLimit } = useRateLimit('alt_gen', { limit: 10, interval: 120000 });
+
   useEffect(() => {
     if (id) {
       const foundPlan = storageService.getPlanById(id);
@@ -43,11 +47,11 @@ export const PlanViewer: React.FC = () => {
     };
   }, []);
 
-  const handleUpdateImage = (itemId: string, newUrl: string) => {
+  const handleUpdateImage = useCallback((itemId: string, newUrl: string) => {
     setGeneratedImages(prev => ({ ...prev, [itemId]: newUrl }));
-  };
+  }, []);
 
-  const handleRegenerate = () => {
+  const handleRegenerate = useCallback(() => {
     if(plan?.preferences) {
         navigate('/create', { state: { preferences: plan.preferences } });
     } else {
@@ -55,49 +59,51 @@ export const PlanViewer: React.FC = () => {
             navigate('/create');
         }
     }
-  };
+  }, [plan, navigate]);
 
-  const handleDeletePlan = () => {
+  const handleDeletePlan = useCallback(() => {
     if (window.confirm("Are you sure you want to delete this plan? This action cannot be undone.")) {
       if (plan) {
         storageService.deletePlan(plan.id);
+        toast.success("Plan deleted successfully");
         navigate('/dashboard');
       }
     }
-  };
+  }, [plan, navigate]);
 
-  const handleSavePlan = () => {
+  const handleSavePlan = useCallback(() => {
     if (plan) {
       storageService.savePlan(plan);
       storageService.clearDraft();
-      alert("Plan saved successfully to Dashboard!");
+      toast.success("Plan saved successfully to Dashboard!");
       navigate(`/plan/${plan.id}`);
     }
-  };
+  }, [plan, navigate]);
 
-  const handleSpeak = (text: string) => {
+  const handleSpeak = useCallback((text: string) => {
     if (!('speechSynthesis' in window)) {
-      alert("Text-to-Speech not supported in this browser.");
+      toast.error("Text-to-Speech not supported in this browser.");
       return;
     }
 
     if (playingText === text) {
-      // Stop if clicking same button
       window.speechSynthesis.cancel();
       setPlayingText(null);
     } else {
-      // Play new text
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1;
       utterance.onend = () => setPlayingText(null);
-      utterance.onerror = () => setPlayingText(null);
+      utterance.onerror = () => {
+          setPlayingText(null);
+          toast.error("Error playing audio.");
+      };
       setPlayingText(text);
       window.speechSynthesis.speak(utterance);
     }
-  };
+  }, [playingText]);
 
-  const renderInstructions = (instructions?: string[]) => {
+  const renderInstructions = useCallback((instructions?: string[]) => {
     if (!instructions || !Array.isArray(instructions) || instructions.length === 0) {
       return <p className="text-sm text-slate-700 dark:text-slate-300">Follow standard form.</p>;
     }
@@ -111,30 +117,35 @@ export const PlanViewer: React.FC = () => {
         ))}
       </ol>
     );
-  };
+  }, []);
 
   // Substitution Logic
-  const openSubModal = (id: string, name: string, type: 'Exercise' | 'Meal') => {
+  const openSubModal = useCallback((id: string, name: string, type: 'Exercise' | 'Meal') => {
     setSubItem({ id, name, type });
     setSubQuery('');
     setSubOptions([]);
     setSubModalOpen(true);
-  };
+  }, []);
 
-  const fetchAlternatives = async () => {
+  const fetchAlternatives = useCallback(async () => {
     if (!subItem || !subQuery.trim()) return;
+    
+    if (!checkAltLimit()) return;
+
     setSubLoading(true);
+    const toastId = toast.loading("Finding alternatives...");
     try {
       const alts = await getAlternatives(subItem.name, subItem.type, subQuery);
       setSubOptions(alts);
+      toast.success("Found alternatives!", { id: toastId });
     } catch (e) {
-      alert("Failed to get alternatives. Try again.");
+      toast.error("Failed to get alternatives. Try again.", { id: toastId });
     } finally {
       setSubLoading(false);
     }
-  };
+  }, [subItem, subQuery, checkAltLimit]);
 
-  const handleApplySubstitution = (alt: AlternativeOption) => {
+  const handleApplySubstitution = useCallback((alt: AlternativeOption) => {
     if (!plan || !subItem) return;
     
     const newPlan = { ...plan };
@@ -146,7 +157,7 @@ export const PlanViewer: React.FC = () => {
         day.workout[idx] = {
             ...day.workout[idx],
             name: alt.name,
-            ...alt.data // Spread structured data (instructions, notes, sets, reps)
+            ...alt.data 
         };
       }
     } else {
@@ -155,7 +166,7 @@ export const PlanViewer: React.FC = () => {
         day.meals[idx] = {
             ...day.meals[idx],
             name: alt.name,
-            ...alt.data // Spread structured data (recipe, macros, ingredients)
+            ...alt.data 
         };
       }
     }
@@ -167,7 +178,14 @@ export const PlanViewer: React.FC = () => {
       storageService.updatePlan(newPlan);
     }
     setSubModalOpen(false);
-  };
+    toast.success(`${subItem.type} updated successfully`);
+  }, [plan, subItem, activeDayIndex, isDraft]);
+
+  const activeDay = useMemo(() => {
+    if(!plan?.days) return null;
+    return plan.days[activeDayIndex];
+  }, [plan, activeDayIndex]);
+
 
   if (loading) return <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950"><Loader2 className="w-10 h-10 text-indigo-600 animate-spin" /></div>;
 
@@ -175,14 +193,12 @@ export const PlanViewer: React.FC = () => {
   
   if (!plan.days || plan.days.length === 0) return <div className="p-10 text-center">Incomplete Data</div>;
 
-  const activeDay = plan.days[activeDayIndex];
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20 transition-colors">
       
       {/* ------------------------ PRINT LAYOUT ------------------------ */}
       <div className="hidden print:block bg-white text-black p-8 font-sans w-full max-w-[210mm] mx-auto">
-         
+         {/* ... Print layout remains same ... */}
          {/* Branding Header */}
          <div className="flex justify-between items-center mb-8 border-b-2 border-indigo-600 pb-4">
              <div>
@@ -367,7 +383,7 @@ export const PlanViewer: React.FC = () => {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {activeDay.workout?.map((exercise) => {
+                {activeDay && activeDay.workout?.map((exercise) => {
                    // Join instructions for speech
                    const instructionText = Array.isArray(exercise.instructions) ? exercise.instructions.join('. ') : (exercise.instructions || '');
                    const textToSpeak = `${exercise.name}. ${instructionText} ${exercise.notes}`;
@@ -449,7 +465,7 @@ export const PlanViewer: React.FC = () => {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {activeDay.meals?.map((meal) => {
+                {activeDay && activeDay.meals?.map((meal) => {
                     // Join recipe for speech
                     const recipeText = Array.isArray(meal.recipe) ? meal.recipe.join('. ') : (meal.recipe || '');
                     const textToSpeak = `${meal.name}. ${recipeText}`;
