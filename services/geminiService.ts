@@ -1,17 +1,32 @@
-
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserPreferences, FitnessPlan, AlternativeOption } from "../types";
 
 const getClient = () => {
   const apiKey = localStorage.getItem('gemini_api_key');
-  if (!apiKey) throw new Error("API Key not found");
+  if (!apiKey) throw new Error("API Key not found. Please set it in Settings.");
   return new GoogleGenAI({ apiKey });
+};
+
+const handleGeminiError = (error: any): never => {
+  console.error("Gemini API Error:", error);
+  const msg = error?.message || '';
+  
+  if (msg.includes('429') || msg.includes('quota') || msg.includes('limit')) {
+    throw new Error("AI usage limit reached. Please try again in a few minutes.");
+  }
+  if (msg.includes('API key')) {
+    throw new Error("Invalid API Key. Please check your settings.");
+  }
+  if (error instanceof SyntaxError) {
+    throw new Error("AI returned incomplete data. Please try again.");
+  }
+  
+  throw new Error("Failed to connect to AI. Please try again.");
 };
 
 export const generateFitnessPlan = async (prefs: UserPreferences): Promise<FitnessPlan> => {
   const ai = getClient();
   
-  // Optimized prompt: shorter instructions, strictly valid JSON to prevent truncation and improve speed
   const prompt = `
     Create a JSON fitness plan for: ${prefs.name}, ${prefs.goal}, ${prefs.level}, ${prefs.equipment}, ${prefs.workoutDays.join(',')}.
     Diet: ${prefs.diet}. Allergies: ${prefs.allergies}. Injuries: ${prefs.injuries}.
@@ -53,7 +68,6 @@ export const generateFitnessPlan = async (prefs: UserPreferences): Promise<Fitne
 
     // Sanitization
     text = text.trim();
-    // Remove markdown code blocks if present
     text = text.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
 
     const data = JSON.parse(text);
@@ -67,8 +81,7 @@ export const generateFitnessPlan = async (prefs: UserPreferences): Promise<Fitne
       ...data
     };
   } catch (error) {
-    console.error("Plan Generation Error:", error);
-    throw error;
+    return handleGeminiError(error);
   }
 };
 
@@ -79,7 +92,6 @@ export const getAlternatives = async (
 ): Promise<AlternativeOption[]> => {
   const ai = getClient();
   
-  // Prompt requests full data structure to ensure Instructions and Tips are updated correctly
   const prompt = `
     Substitute ${type}: "${itemName}". Issue: "${constraint}".
     Provide 3 alternatives.
@@ -98,79 +110,87 @@ export const getAlternatives = async (
     ]
   `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-    config: {
-      responseMimeType: "application/json"
-    }
-  });
-
-  const text = response.text || "[]";
   try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: "application/json"
+      }
+    });
+
+    const text = response.text || "[]";
     const cleanText = text.replace(/```json|```/g, '').trim();
     return JSON.parse(cleanText);
-  } catch (e) {
-    return [];
+  } catch (error) {
+    return handleGeminiError(error);
   }
 };
 
 export const generateImage = async (prompt: string): Promise<string> => {
   const ai = getClient();
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: prompt,
-  });
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: prompt,
+    });
 
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
-    if (part.inlineData) {
-      return `data:image/png;base64,${part.inlineData.data}`;
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        return `data:image/png;base64,${part.inlineData.data}`;
+      }
     }
+    throw new Error("No image generated");
+  } catch (error) {
+    return handleGeminiError(error);
   }
-  throw new Error("No image generated");
 };
 
 export const editImage = async (base64Image: string, editInstruction: string): Promise<string> => {
   const ai = getClient();
-  const matches = base64Image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-  
-  let mimeType = 'image/png';
-  let data = base64Image;
+  try {
+    const matches = base64Image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+    
+    let mimeType = 'image/png';
+    let data = base64Image;
 
-  if (matches && matches.length === 3) {
-    mimeType = matches[1];
-    data = matches[2];
-  } else {
-    data = base64Image.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
-  }
-
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash-image',
-    contents: {
-      parts: [
-        { inlineData: { mimeType, data } },
-        { text: editInstruction }
-      ]
+    if (matches && matches.length === 3) {
+      mimeType = matches[1];
+      data = matches[2];
+    } else {
+      data = base64Image.replace(/^data:image\/(png|jpeg|jpg);base64,/, '');
     }
-  });
 
-  for (const part of response.candidates?.[0]?.content?.parts || []) {
-    if (part.inlineData) {
-      return `data:image/png;base64,${part.inlineData.data}`;
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash-image',
+      contents: {
+        parts: [
+          { inlineData: { mimeType, data } },
+          { text: editInstruction }
+        ]
+      }
+    });
+
+    for (const part of response.candidates?.[0]?.content?.parts || []) {
+      if (part.inlineData) {
+        return `data:image/png;base64,${part.inlineData.data}`;
+      }
     }
+    throw new Error("Image editing failed");
+  } catch (error) {
+    return handleGeminiError(error);
   }
-  
-  throw new Error("Image editing failed");
 };
 
 export const getDemoPlan = (): FitnessPlan => {
+  // Demo plan remains same
   return {
     id: 'demo-plan-123',
     createdAt: Date.now(),
     userName: 'Demo User',
     goal: 'Muscle Gain Demo',
     duration: '3 Days/Week',
-    summary: 'This is a demonstration plan designed to showcase the capabilities of the application.',
+    summary: 'A balanced routine focused on compound movements and high protein intake.',
     totalCalories: 2600,
     preferences: {
         name: 'Demo User', age: 25, gender: 'Male', weight: 75, height: 180,
@@ -181,11 +201,11 @@ export const getDemoPlan = (): FitnessPlan => {
       {
         day: 'Monday',
         workout: [
-          { id: 'w1', name: 'Barbell Squat', sets: '4', reps: '8-10', rest: '120s', notes: 'Keep chest up.', instructions: ['Place bar on upper back.', 'Feet shoulder width.', 'Squat down until thighs are parallel.', 'Drive back up.'], imageUrl: '' },
-          { id: 'w2', name: 'Bench Press', sets: '3', reps: '10', rest: '90s', notes: 'Control the bar.', instructions: ['Lie on bench.', 'Grip bar wider than shoulders.', 'Lower bar to chest.', 'Press back up.'], imageUrl: '' }
+          { id: 'w1', name: 'Barbell Squat', sets: '4', reps: '8-10', rest: '120s', notes: 'Keep chest up and core tight.', instructions: ['Place bar on upper back.', 'Feet shoulder width apart.', 'Squat down until thighs parallel.', 'Drive back up explosively.'], imageUrl: '' },
+          { id: 'w2', name: 'Bench Press', sets: '3', reps: '10', rest: '90s', notes: 'Control the bar on the way down.', instructions: ['Lie on bench, eyes under bar.', 'Grip slightly wider than shoulders.', 'Lower bar to mid-chest.', 'Press bar back up.'], imageUrl: '' }
         ],
         meals: [
-          { id: 'm1', name: 'Oatmeal Protein Bowl', calories: 550, protein: 35, carbs: 60, fat: 12, ingredients: ['Oats', 'Whey Protein', 'Berries'], recipe: ['Cook oats in water.', 'Stir in whey protein.', 'Top with berries.'], imageUrl: '' }
+          { id: 'm1', name: 'Oatmeal Protein Bowl', calories: 550, protein: 35, carbs: 60, fat: 12, ingredients: ['Oats', 'Whey Protein', 'Berries', 'Almond Milk'], recipe: ['Cook oats with almond milk.', 'Stir in whey protein powder.', 'Top with fresh berries.'], imageUrl: '' }
         ]
       }
     ]
