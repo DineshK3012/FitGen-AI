@@ -13,17 +13,10 @@ export const storageService = {
     if (userKey) {
       return userKey;
     }
-    // This will be replaced by the build environment if an API_KEY is set.
-    // It's a safe way to provide a fallback without exposing the key in client-side code.
-    try {
-      if (process.env.API_KEY) {
-        return process.env.API_KEY;
-      }
-    } catch (e) {
-      // process.env might not be defined in all contexts
-      return null;
-    }
-    return null;
+    // Use Vite's typed env object. Client-exposed env vars must be prefixed with `VITE_`.
+    // NOTE: do not store true secrets in client-side code; prefer a server-side proxy.
+    const gemini_api_key = import.meta.env.VITE_GEMINI_API_KEY;
+    return gemini_api_key ?? null;
   },
 
   setApiKey: (key: string) => {
