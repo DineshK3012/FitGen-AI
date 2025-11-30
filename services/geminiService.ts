@@ -1,9 +1,10 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { UserPreferences, FitnessPlan, AlternativeOption } from "../types";
+import { storageService } from './storageService';
 
 const getClient = () => {
-  const apiKey = localStorage.getItem('gemini_api_key');
-  if (!apiKey) throw new Error("API Key not found. Please set it in Settings.");
+  const apiKey = storageService.getApiKey();
+  if (!apiKey) throw new Error("API Key not found. Please set one in Settings, or provide one in the environment.");
   return new GoogleGenAI({ apiKey });
 };
 
@@ -28,16 +29,22 @@ export const generateFitnessPlan = async (prefs: UserPreferences): Promise<Fitne
   const ai = getClient();
   
   const prompt = `
-    Create a JSON fitness plan for: ${prefs.name}, ${prefs.goal}, ${prefs.level}, ${prefs.equipment}, ${prefs.workoutDays.join(',')}.
-    Diet: ${prefs.diet}. Allergies: ${prefs.allergies}. Injuries: ${prefs.injuries}.
-    Additional User Remarks/Requests: "${prefs.remarks || 'None'}".
+    Create a comprehensive 7-DAY JSON fitness plan for:
+    - User: ${prefs.name}, Goal: ${prefs.goal}, Level: ${prefs.level}.
+    - Equipment: ${prefs.equipment}.
+    - Workout Days: ${prefs.workoutDays.join(',')}.
+    - Diet: ${prefs.diet}, Meals/Day: ${prefs.mealsPerDay}, Cheat Day: ${prefs.cheatDay}.
+    - Constraints: Allergies: ${prefs.allergies}, Injuries: ${prefs.injuries}.
+    - Remarks: "${prefs.remarks || 'None'}".
 
-    Constraints:
-    1. Output strictly valid JSON.
-    2. 'instructions': Provide clear step-by-step instructions as an array of strings (e.g. ["Stand tall", "Lower hips"]). Max 4 steps.
-    3. 'notes': max 10 words tip.
-    4. 'recipe': Provide preparation steps as an array of strings (e.g. ["Mix ingredients", "Cook for 10 mins"]). Max 4 steps.
-    5. 'summary': max 15 words.
+    CRITICAL INSTRUCTIONS:
+    1. The plan MUST cover all 7 days of the week (Monday to Sunday).
+    2. For days NOT in the workout schedule, the 'workout' array should contain a single object for "Rest" or "Active Recovery" (e.g., name: "Rest Day", sets: "N/A").
+    3. The 'meals' array MUST be populated for ALL 7 days.
+    4. On the user's cheat day (${prefs.cheatDay}), include one more lenient "cheat meal".
+    5. 'instructions' & 'recipe' MUST be arrays of strings. Max 4 steps.
+    6. 'notes' must be a brief tip. 'summary' must be a concise overview.
+    7. Output STRICTLY VALID JSON.
 
     JSON Structure:
     {
@@ -47,9 +54,10 @@ export const generateFitnessPlan = async (prefs: UserPreferences): Promise<Fitne
       "days": [
         {
           "day": "Monday",
-          "workout": [{ "id": "w1", "name": "...", "sets": "3", "reps": "10", "rest": "60s", "notes": "...", "instructions": ["Step 1", "Step 2"] }],
-          "meals": [{ "id": "m1", "name": "...", "calories": 500, "protein": 30, "carbs": 50, "fat": 15, "ingredients": ["A"], "recipe": ["Step 1", "Step 2"] }]
-        }
+          "workout": [{ "id": "w1", "name": "...", "sets": "3", "reps": "10", "rest": "60s", "notes": "...", "instructions": ["Step 1"] }],
+          "meals": [{ "id": "m1", "name": "...", "calories": 500, "protein": 30, "carbs": 50, "fat": 15, "ingredients": ["A"], "recipe": ["Step 1"] }]
+        },
+        ... (6 more days) ...
       ]
     }
   `;
@@ -183,31 +191,76 @@ export const editImage = async (base64Image: string, editInstruction: string): P
 };
 
 export const getDemoPlan = (): FitnessPlan => {
-  // Demo plan remains same
   return {
     id: 'demo-plan-123',
     createdAt: Date.now(),
     userName: 'Demo User',
     goal: 'Muscle Gain Demo',
     duration: '3 Days/Week',
-    summary: 'A balanced routine focused on compound movements and high protein intake.',
+    summary: 'A balanced routine for muscle gain with a full weekly diet.',
     totalCalories: 2600,
     preferences: {
         name: 'Demo User', age: 25, gender: 'Male', weight: 75, height: 180,
         goal: 'Muscle Gain', level: 'Intermediate', equipment: 'Gym',
-        diet: 'None', workoutDays: ['Mon', 'Wed', 'Fri'], injuries: 'None', allergies: 'None', medications: 'None', remarks: 'None'
+        diet: 'None', workoutDays: ['Monday', 'Wednesday', 'Friday'], injuries: 'None', allergies: 'None', medications: 'None', remarks: 'None',
+        mealsPerDay: 4, cheatDay: 'Sunday'
     },
     days: [
       {
         day: 'Monday',
         workout: [
-          { id: 'w1', name: 'Barbell Squat', sets: '4', reps: '8-10', rest: '120s', notes: 'Keep chest up and core tight.', instructions: ['Place bar on upper back.', 'Feet shoulder width apart.', 'Squat down until thighs parallel.', 'Drive back up explosively.'], imageUrl: '' },
-          { id: 'w2', name: 'Bench Press', sets: '3', reps: '10', rest: '90s', notes: 'Control the bar on the way down.', instructions: ['Lie on bench, eyes under bar.', 'Grip slightly wider than shoulders.', 'Lower bar to mid-chest.', 'Press bar back up.'], imageUrl: '' }
+          { id: 'w1_mon', name: 'Barbell Squat', sets: '4', reps: '8-10', rest: '120s', notes: 'Keep chest up.', instructions: ['Place bar on upper back.', 'Squat until thighs are parallel.'], imageUrl: '' }
         ],
         meals: [
-          { id: 'm1', name: 'Oatmeal Protein Bowl', calories: 550, protein: 35, carbs: 60, fat: 12, ingredients: ['Oats', 'Whey Protein', 'Berries', 'Almond Milk'], recipe: ['Cook oats with almond milk.', 'Stir in whey protein powder.', 'Top with fresh berries.'], imageUrl: '' }
+          { id: 'm1_mon', name: 'Protein Oatmeal', calories: 550, protein: 35, carbs: 60, fat: 12, ingredients: ['Oats', 'Whey'], recipe: ['Cook oats.', 'Mix in protein.'], imageUrl: '' }
         ]
-      }
+      },
+      {
+        day: 'Tuesday',
+        workout: [{ id: 'w1_tue', name: 'Rest Day', sets: 'N/A', reps: 'N/A', rest: 'N/A', notes: 'Focus on recovery.', instructions: ['Light stretching or a short walk is beneficial.'] }],
+        meals: [
+          { id: 'm1_tue', name: 'Grilled Chicken Salad', calories: 500, protein: 40, carbs: 20, fat: 25, ingredients: ['Chicken Breast', 'Greens'], recipe: ['Grill chicken.', 'Serve over greens.'], imageUrl: '' }
+        ]
+      },
+       {
+        day: 'Wednesday',
+        workout: [
+          { id: 'w1_wed', name: 'Bench Press', sets: '3', reps: '10', rest: '90s', notes: 'Control the bar.', instructions: ['Lower bar to chest.', 'Press back up.'], imageUrl: '' }
+        ],
+        meals: [
+          { id: 'm1_wed', name: 'Salmon and Quinoa', calories: 600, protein: 45, carbs: 50, fat: 20, ingredients: ['Salmon', 'Quinoa'], recipe: ['Bake salmon.', 'Cook quinoa.'], imageUrl: '' }
+        ]
+      },
+       {
+        day: 'Thursday',
+        workout: [{ id: 'w1_thu', name: 'Active Recovery', sets: 'N/A', reps: '30 min', rest: 'N/A', notes: 'Light cardio.', instructions: ['Go for a brisk walk or a light jog.'] }],
+        meals: [
+          { id: 'm1_thu', name: 'Greek Yogurt Bowl', calories: 400, protein: 30, carbs: 40, fat: 15, ingredients: ['Greek Yogurt', 'Berries'], recipe: ['Combine in a bowl.'], imageUrl: '' }
+        ]
+      },
+      {
+        day: 'Friday',
+        workout: [
+          { id: 'w1_fri', name: 'Deadlift', sets: '4', reps: '6-8', rest: '180s', notes: 'Keep back straight.', instructions: ['Hinge at hips.', 'Lift with your legs.'], imageUrl: '' }
+        ],
+        meals: [
+          { id: 'm1_fri', name: 'Steak and Sweet Potato', calories: 650, protein: 50, carbs: 55, fat: 22, ingredients: ['Steak', 'Sweet Potato'], recipe: ['Grill steak.', 'Bake sweet potato.'], imageUrl: '' }
+        ]
+      },
+      {
+        day: 'Saturday',
+        workout: [{ id: 'w1_sat', name: 'Rest Day', sets: 'N/A', reps: 'N/A', rest: 'N/A', notes: 'Enjoy your weekend.', instructions: ['Allow your body to fully recover.'] }],
+        meals: [
+          { id: 'm1_sat', name: 'Chicken Wraps', calories: 500, protein: 35, carbs: 40, fat: 20, ingredients: ['Chicken', 'Tortilla'], recipe: ['Assemble ingredients in wrap.'], imageUrl: '' }
+        ]
+      },
+       {
+        day: 'Sunday',
+        workout: [{ id: 'w1_sun', name: 'Rest Day', sets: 'N/A', reps: 'N/A', rest: 'N/A', notes: 'Prepare for the week.', instructions: ['Relax and hydrate.'] }],
+        meals: [
+          { id: 'm1_sun_cheat', name: 'Cheat Meal: Pizza', calories: 800, protein: 40, carbs: 90, fat: 35, ingredients: ['Pizza Dough', 'Cheese'], recipe: ['Enjoy a slice or two of your favorite pizza.'], imageUrl: '' }
+        ]
+      },
     ]
   };
 };

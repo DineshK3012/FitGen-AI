@@ -1,4 +1,5 @@
 
+
 export interface Exercise {
   id: string;
   name: string;
@@ -60,6 +61,8 @@ export interface UserPreferences {
   allergies: string;
   medications: string;
   remarks?: string; // New field for specific user requests
+  mealsPerDay: number;
+  cheatDay: string;
 }
 
 export interface AlternativeOption {

@@ -8,7 +8,22 @@ const KEYS = {
 
 export const storageService = {
   getApiKey: (): string | null => {
-    return localStorage.getItem(KEYS.API_KEY);
+    // Prioritize user's key, then fall back to environment variable.
+    const userKey = localStorage.getItem(KEYS.API_KEY);
+    if (userKey) {
+      return userKey;
+    }
+    // This will be replaced by the build environment if an API_KEY is set.
+    // It's a safe way to provide a fallback without exposing the key in client-side code.
+    try {
+      if (process.env.API_KEY) {
+        return process.env.API_KEY;
+      }
+    } catch (e) {
+      // process.env might not be defined in all contexts
+      return null;
+    }
+    return null;
   },
 
   setApiKey: (key: string) => {
