@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 const STEPS = [
   { id: 1, title: 'Personal Info' },
   { id: 2, title: 'Fitness Profile' },
-  { id: 3, title: 'Diet & Schedule' }
+  { id: 3, title: 'Preferences & Schedule' }
 ];
 
 const WEEKDAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
@@ -198,42 +198,95 @@ export const CreatePlan: React.FC = () => {
           {currentStep === 1 && (
              <motion.div key="step1" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
               <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Personal Info</h2>
-              {/* Step 1 content */}
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Full Name</label>
+                  <input type="text" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white" placeholder="John Doe"/>
+                  {validationErrors.name && <p className="text-red-500 text-xs mt-1">{validationErrors.name}</p>}
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Gender</label>
+                  <select value={formData.gender} onChange={(e) => setFormData({...formData, gender: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white">
+                    <option>Male</option><option>Female</option><option>Non-binary</option><option>Prefer not to say</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Age</label>
+                  <input type="number" value={formData.age} onChange={(e) => setFormData({...formData, age: Number(e.target.value)})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white"/>
+                  {validationErrors.age && <p className="text-red-500 text-xs mt-1">{validationErrors.age}</p>}
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Weight (kg)</label>
+                    <input type="number" value={formData.weight} onChange={(e) => setFormData({...formData, weight: Number(e.target.value)})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white"/>
+                    {validationErrors.weight && <p className="text-red-500 text-xs mt-1">{validationErrors.weight}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Height (cm)</label>
+                    <input type="number" value={formData.height} onChange={(e) => setFormData({...formData, height: Number(e.target.value)})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white"/>
+                    {validationErrors.height && <p className="text-red-500 text-xs mt-1">{validationErrors.height}</p>}
+                  </div>
+                </div>
+              </div>
              </motion.div>
           )}
 
           {currentStep === 2 && (
              <motion.div key="step2" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-6">
                <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Fitness Profile</h2>
-               {/* Step 2 content */}
+               <div className="space-y-6">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Primary Goal</label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {['Muscle Gain', 'Weight Loss', 'Endurance', 'Flexibility', 'General Health'].map(opt => (
+                      <button key={opt} onClick={() => setFormData({...formData, goal: opt})} className={`p-4 rounded-xl text-sm font-medium border transition-all ${formData.goal === opt ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-indigo-300'}`}>
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Experience Level</label>
+                  <select value={formData.level} onChange={(e) => setFormData({...formData, level: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white">
+                    <option>Beginner (0-1 years)</option>
+                    <option>Intermediate (1-3 years)</option>
+                    <option>Advanced (3+ years)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Equipment Available</label>
+                  <select value={formData.equipment} onChange={(e) => setFormData({...formData, equipment: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white">
+                    <option>Full Commercial Gym</option>
+                    <option>Home Gym (Dumbbells & Bench)</option>
+                    <option>Dumbbells Only</option>
+                    <option>Bodyweight Only (No Equipment)</option>
+                  </select>
+                </div>
+              </div>
              </motion.div>
           )}
 
           {currentStep === 3 && (
             <motion.div key="step3" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} className="space-y-8">
-              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Diet & Schedule</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-6">Preferences & Schedule</h2>
               
+               <div>
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Dietary Preference</label>
+                <select value={formData.diet} onChange={(e) => setFormData({...formData, diet: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white">
+                  <option>No Restrictions</option><option>Vegetarian</option><option>Vegan</option><option>Keto</option><option>Paleo</option><option>Pescatarian</option><option>Gluten-Free</option>
+                </select>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Meals Per Day</label>
-                  <select
-                    value={formData.mealsPerDay}
-                    onChange={(e) => setFormData({...formData, mealsPerDay: Number(e.target.value)})}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white"
-                  >
-                    <option>3</option>
-                    <option>4</option>
-                    <option>5</option>
-                    <option>6</option>
+                  <select value={formData.mealsPerDay} onChange={(e) => setFormData({...formData, mealsPerDay: Number(e.target.value)})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white">
+                    <option>3</option><option>4</option><option>5</option><option>6</option>
                   </select>
                 </div>
                  <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Optional Cheat Day</label>
-                  <select
-                    value={formData.cheatDay}
-                    onChange={(e) => setFormData({...formData, cheatDay: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white"
-                  >
+                  <select value={formData.cheatDay} onChange={(e) => setFormData({...formData, cheatDay: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white">
                     <option>None</option>
                     {WEEKDAYS.map(day => <option key={day}>{day}</option>)}
                   </select>
@@ -244,15 +297,7 @@ export const CreatePlan: React.FC = () => {
                 <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">Select Workout Days</label>
                 <div className="flex flex-wrap gap-2">
                   {WEEKDAYS.map(day => (
-                    <button
-                      key={day}
-                      onClick={() => toggleDay(day)}
-                      className={`px-4 py-2 text-xs sm:px-5 sm:py-2.5 sm:text-sm rounded-full font-semibold transition-all ${
-                        formData.workoutDays.includes(day)
-                          ? 'bg-indigo-600 text-white shadow-md'
-                          : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                      }`}
-                    >
+                    <button key={day} onClick={() => toggleDay(day)} className={`px-4 py-2 text-xs sm:px-5 sm:py-2.5 sm:text-sm rounded-full font-semibold transition-all ${formData.workoutDays.includes(day) ? 'bg-indigo-600 text-white shadow-md' : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'}`}>
                       {day}
                     </button>
                   ))}
@@ -260,16 +305,24 @@ export const CreatePlan: React.FC = () => {
                 {validationErrors.workoutDays && <p className="text-red-500 text-xs mt-2">{validationErrors.workoutDays}</p>}
               </div>
               
-              <div>
-                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Additional Remarks</label>
-                  <textarea
-                    value={formData.remarks}
-                    onChange={(e) => setFormData({...formData, remarks: e.target.value})}
-                    className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white h-24 resize-none"
-                    placeholder="e.g. I prefer shorter workouts, I hate burpees..."
-                  />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Injuries (if any)</label>
+                  <input type="text" value={formData.injuries} onChange={(e) => setFormData({...formData, injuries: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white" placeholder="e.g. Lower back pain, bad left knee..."/>
                 </div>
-
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Allergies (if any)</label>
+                  <input type="text" value={formData.allergies} onChange={(e) => setFormData({...formData, allergies: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white" placeholder="e.g. Peanuts, Shellfish..."/>
+                </div>
+                 <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Medications / Conditions</label>
+                  <input type="text" value={formData.medications} onChange={(e) => setFormData({...formData, medications: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white" placeholder="e.g. Asthma, High Blood Pressure..."/>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Additional Remarks</label>
+                  <textarea value={formData.remarks} onChange={(e) => setFormData({...formData, remarks: e.target.value})} className="w-full bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 rounded-xl p-3 focus:ring-2 focus:ring-indigo-500 dark:text-white h-24 resize-none" placeholder="e.g. I prefer shorter workouts, I hate burpees..."/>
+                </div>
+              </div>
             </motion.div>
           )}
         </AnimatePresence>

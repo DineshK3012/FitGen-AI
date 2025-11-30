@@ -18,7 +18,7 @@ FitGen AI is a modern, AI-powered web application designed to be your personal f
 - **🔊 Text-to-Speech**: Listen to exercise instructions and meal recipes with the integrated audio feature.
 - **🌓 Dark & Light Mode**: A sleek, modern UI with full support for both dark and light themes.
 - **📱 Fully Responsive**: A seamless experience across all devices, from mobile phones to desktop computers.
-- ** Fallback API Key**: The app can be configured with a fallback environment-level API key for new users.
+- **🔑 Fallback API Key**: The app can be configured with a fallback environment-level API key for new users.
 
 ---
 
