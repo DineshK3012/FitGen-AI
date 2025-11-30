@@ -4,9 +4,10 @@ import { FitnessPlan, AlternativeOption } from '../types';
 import { storageService } from '../services/storageService';
 import { getAlternatives } from '../services/geminiService';
 import { AIImageEditor } from '../components/AIImageEditor';
-import { ArrowLeft, Clock, Flame, Dumbbell, Utensils, Printer, RefreshCw, AlertTriangle, FileQuestion, Save, Shuffle, Volume2, X, Check, Loader2, User, Info, Square, Trash2, Droplet, Wheat, Beef, Bookmark } from 'lucide-react';
+import { ArrowLeft, Clock, Flame, Dumbbell, Utensils, Printer, RefreshCw, Save, Shuffle, Volume2, X, Loader2, User, Info, Square, Trash2, Droplet, Wheat, Beef, Bookmark } from 'lucide-react';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { toast } from 'sonner';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 export const PlanViewer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -27,6 +28,9 @@ export const PlanViewer: React.FC = () => {
   const [subQuery, setSubQuery] = useState('');
   const [subLoading, setSubLoading] = useState(false);
   const [subOptions, setSubOptions] = useState<AlternativeOption[]>([]);
+
+  // Delete Modal State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   // Rate Limiter
   const { checkLimit: checkAltLimit } = useRateLimit('alt_gen', { limit: 10, interval: 120000 });
@@ -59,13 +63,15 @@ export const PlanViewer: React.FC = () => {
     }
   }, [plan, navigate]);
 
-  const handleDeletePlan = useCallback(() => {
-    if (window.confirm("Delete this plan permanently?")) {
-      if (plan) {
-        storageService.deletePlan(plan.id);
-        toast.success("Plan deleted");
-        navigate('/dashboard');
-      }
+  const handleDeleteClick = useCallback(() => {
+    setShowDeleteModal(true);
+  }, []);
+
+  const confirmDelete = useCallback(() => {
+    if (plan) {
+      storageService.deletePlan(plan.id);
+      toast.success("Plan deleted");
+      navigate('/dashboard');
     }
   }, [plan, navigate]);
 
@@ -297,7 +303,7 @@ export const PlanViewer: React.FC = () => {
                 
                 <div className="flex gap-2 text-sm overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">
                     {!isDraft && (
-                        <button onClick={handleDeletePlan} className="flex-shrink-0 flex items-center gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/10 px-3 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                        <button onClick={handleDeleteClick} className="flex-shrink-0 flex items-center gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/10 px-3 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
                             <Trash2 size={14} /> Delete
                         </button>
                     )}
@@ -508,7 +514,7 @@ export const PlanViewer: React.FC = () => {
 
         {/* Substitution Modal */}
         {subModalOpen && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
                 <div className="bg-white dark:bg-slate-900 w-full max-w-md rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 flex flex-col max-h-[85vh]">
                     <div className="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
                         <h3 className="font-bold text-lg text-slate-900 dark:text-white">Substitute Item</h3>
@@ -539,6 +545,17 @@ export const PlanViewer: React.FC = () => {
                 </div>
             </div>
         )}
+
+        {/* Delete Confirmation Modal */}
+        <ConfirmModal 
+          isOpen={showDeleteModal}
+          onClose={() => setShowDeleteModal(false)}
+          onConfirm={confirmDelete}
+          title="Delete Plan"
+          message="Are you sure you want to permanently delete this plan? This action cannot be undone."
+          confirmText="Delete"
+          isDestructive={true}
+        />
       </div>
     </div>
   );

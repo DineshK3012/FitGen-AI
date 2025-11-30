@@ -54,7 +54,7 @@ export const Home: React.FC = () => {
             <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button 
                 onClick={() => navigate('/create')}
-                className="w-full sm:w-auto px-8 py-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-xl shadow-indigo-600/20 flex items-center justify-center"
+                className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center"
               >
                 Generate My Plan
                 <ArrowRight className="w-5 h-5 ml-2" />

@@ -2,11 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { FitnessPlan } from '../types';
 import { storageService } from '../services/storageService';
 import { PlanCard } from '../components/PlanCard';
-import { Plus, Settings, Activity, Zap } from 'lucide-react';
+import { Plus, Settings, Zap } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { ConfirmModal } from '../components/ConfirmModal';
+import { toast } from 'sonner';
 
 export const Dashboard: React.FC = () => {
   const [plans, setPlans] = useState<FitnessPlan[]>([]);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,11 +18,17 @@ export const Dashboard: React.FC = () => {
     setPlans(loadedPlans);
   }, []);
 
-  const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this plan?')) {
-      storageService.deletePlan(id);
+  const handleDeleteRequest = (id: string) => {
+    setDeleteId(id);
+  };
+
+  const confirmDelete = () => {
+    if (deleteId) {
+      storageService.deletePlan(deleteId);
       const updatedPlans = storageService.getPlans().filter(p => p.days && Array.isArray(p.days) && p.days.length > 0);
       setPlans(updatedPlans);
+      toast.success('Plan deleted successfully');
+      setDeleteId(null);
     }
   };
 
@@ -69,10 +78,20 @@ export const Dashboard: React.FC = () => {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {plans.map(plan => (
-            <PlanCard key={plan.id} plan={plan} onDelete={handleDelete} />
+            <PlanCard key={plan.id} plan={plan} onDelete={handleDeleteRequest} />
           ))}
         </div>
       )}
+
+      <ConfirmModal 
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={confirmDelete}
+        title="Delete Plan"
+        message="Are you sure you want to permanently delete this fitness plan? This action cannot be undone."
+        confirmText="Delete Plan"
+        isDestructive={true}
+      />
     </div>
   );
 };

@@ -16,14 +16,20 @@ export const AIImageEditor: React.FC<Props> = ({ initialPrompt, contextType, cur
   const [isGenerating, setIsGenerating] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [editPrompt, setEditPrompt] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
   
   // Rate limit: 5 requests per minute for images
   const { checkLimit } = useRateLimit('image_gen', { limit: 5, interval: 60000 });
+
+  useEffect(() => {
+    setImageUrl(currentImageUrl);
+  }, [currentImageUrl]);
 
   const handleGenerate = useCallback(async () => {
     if (!checkLimit()) return;
 
     setIsGenerating(true);
+    setIsExpanded(true); // Ensure container is shown
     const toastId = toast.loading('Generating image with Gemini Nano...');
     
     try {
@@ -36,10 +42,12 @@ export const AIImageEditor: React.FC<Props> = ({ initialPrompt, contextType, cur
       toast.success('Image generated successfully!', { id: toastId });
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Generation failed', { id: toastId });
+      // If failed and no image, collapse
+      if (!imageUrl) setIsExpanded(false);
     } finally {
       setIsGenerating(false);
     }
-  }, [initialPrompt, contextType, onImageUpdate, checkLimit]);
+  }, [initialPrompt, contextType, onImageUpdate, checkLimit, imageUrl]);
 
   const handleEdit = useCallback(async () => {
     if (!imageUrl || !editPrompt) return;
@@ -62,56 +70,56 @@ export const AIImageEditor: React.FC<Props> = ({ initialPrompt, contextType, cur
     }
   }, [imageUrl, editPrompt, onImageUpdate, checkLimit]);
 
-  if (!imageUrl && !isGenerating) {
+  const showEditor = imageUrl || isGenerating || isExpanded;
+
+  if (!showEditor) {
     return (
-      <div className="w-full h-48 bg-slate-100 dark:bg-slate-800 rounded-lg flex flex-col items-center justify-center border-2 border-dashed border-slate-200 dark:border-slate-700 p-4 transition-colors">
-        <ImageIcon className="w-8 h-8 text-slate-400 mb-2" />
-        <p className="text-sm text-slate-500 dark:text-slate-400 mb-3 text-center">No image generated yet</p>
-        <button
-          onClick={handleGenerate}
-          className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium rounded-md flex items-center shadow-sm"
-        >
-          <Wand2 className="w-4 h-4 mr-2" />
-          Generate AI Image
-        </button>
-      </div>
+      <button
+        onClick={handleGenerate}
+        className="w-full py-3 border border-dashed border-indigo-200 dark:border-indigo-800 bg-indigo-50/50 dark:bg-indigo-900/10 rounded-xl text-indigo-600 dark:text-indigo-400 font-medium text-sm hover:bg-indigo-100 dark:hover:bg-indigo-900/20 transition-all flex items-center justify-center gap-2 group"
+      >
+        <ImageIcon className="w-4 h-4 group-hover:scale-110 transition-transform" />
+        Generate AI Visualization
+      </button>
     );
   }
 
   return (
-    <div className="w-full space-y-3">
-      <div className="relative group rounded-lg overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
+    <div className="w-full space-y-3 animate-in fade-in slide-in-from-top-2 duration-300">
+      <div className="relative group rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800">
         {isGenerating && (
           <div className="absolute inset-0 z-10 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm flex items-center justify-center flex-col">
             <Loader2 className="w-8 h-8 text-indigo-600 animate-spin mb-2" />
             <span className="text-sm font-medium text-indigo-900 dark:text-indigo-300">
-              {editPrompt ? 'Editing with Gemini...' : 'Generating...'}
+              {editPrompt ? 'Editing with Gemini...' : 'Creating visualization...'}
             </span>
           </div>
         )}
         
-        {imageUrl && (
+        {imageUrl ? (
           <img 
             src={imageUrl} 
             alt="AI Generated" 
             className="w-full h-64 object-cover"
           />
+        ) : (
+          <div className="w-full h-64 bg-slate-100 dark:bg-slate-800" />
         )}
         
         {/* Floating Controls */}
         <div className="absolute bottom-3 right-3 flex space-x-2">
-            {!editMode && (
+            {!editMode && imageUrl && (
               <>
                  <button
                   onClick={() => setEditMode(true)}
-                  className="bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 p-2 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur transition-all"
+                  className="bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 p-2 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur transition-all hover:scale-105"
                   title="Edit Image with Text"
                 >
                   <Edit className="w-4 h-4" />
                 </button>
                 <button
                   onClick={handleGenerate}
-                  className="bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 p-2 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur transition-all"
+                  className="bg-white/90 dark:bg-slate-800/90 hover:bg-white dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 p-2 rounded-full shadow-lg border border-slate-200 dark:border-slate-700 backdrop-blur transition-all hover:scale-105"
                   title="Regenerate from scratch"
                 >
                   <RefreshCw className="w-4 h-4" />
@@ -122,7 +130,7 @@ export const AIImageEditor: React.FC<Props> = ({ initialPrompt, contextType, cur
       </div>
 
       {editMode && (
-        <div className="bg-white dark:bg-slate-900 p-3 rounded-lg border border-indigo-100 dark:border-slate-700 shadow-sm animate-in fade-in slide-in-from-top-2">
+        <div className="bg-white dark:bg-slate-900 p-3 rounded-xl border border-indigo-100 dark:border-slate-700 shadow-sm animate-in fade-in slide-in-from-top-2">
           <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
             How should Gemini edit this image?
           </label>
@@ -132,12 +140,12 @@ export const AIImageEditor: React.FC<Props> = ({ initialPrompt, contextType, cur
               value={editPrompt}
               onChange={(e) => setEditPrompt(e.target.value)}
               placeholder="e.g. 'Add a sunset background'"
-              className="flex-1 text-sm rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              className="flex-1 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
             />
             <button
               onClick={handleEdit}
               disabled={!editPrompt.trim() || isGenerating}
-              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-md disabled:opacity-50"
+              className="bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-2 rounded-lg disabled:opacity-50"
             >
               <Check className="w-4 h-4" />
             </button>
