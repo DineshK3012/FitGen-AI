@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { Menu, X, Sun, Moon, Zap } from 'lucide-react';
+import { Menu, X, Sun, Moon, Zap, Dumbbell } from 'lucide-react';
 import { useTheme } from '../services/themeContext';
 
 export const Header: React.FC = () => {
@@ -22,7 +22,7 @@ export const Header: React.FC = () => {
           {/* Brand */}
           <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate('/')}>
             <div className="bg-gradient-to-br from-indigo-600 to-purple-600 p-2 rounded-xl shadow-lg shadow-indigo-500/20 group-hover:shadow-indigo-500/40 transition-all duration-300">
-              <Zap className="h-5 w-5 text-white fill-white" />
+              <Dumbbell className="h-5 w-5 text-white" />
             </div>
             <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">
               FitGen <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">AI</span>
@@ -36,17 +36,16 @@ export const Header: React.FC = () => {
                 key={item.name}
                 to={item.path}
                 className={({ isActive }) =>
-                  `px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${
-                    isActive 
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400' 
-                      : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                  `px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 ${isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`
                 }
               >
                 {item.name}
               </NavLink>
             ))}
-            
+
             <div className="w-px h-6 bg-slate-200 dark:bg-slate-800 mx-2"></div>
 
             <button
@@ -86,10 +85,9 @@ export const Header: React.FC = () => {
                 to={item.path}
                 onClick={() => setIsOpen(false)}
                 className={({ isActive }) =>
-                  `block px-4 py-3 rounded-xl text-base font-medium ${
-                    isActive
-                      ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
-                      : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900'
+                  `block px-4 py-3 rounded-xl text-base font-medium ${isActive
+                    ? 'bg-indigo-50 dark:bg-indigo-900/20 text-indigo-600 dark:text-indigo-400'
+                    : 'text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-900'
                   }`
                 }
               >
