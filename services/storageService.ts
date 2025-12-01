@@ -19,6 +19,14 @@ export const storageService = {
     return gemini_api_key ?? null;
   },
 
+  // Returns only the user-provided API key saved in localStorage.
+  // This intentionally does NOT fall back to `import.meta.env` so callers
+  // (like the Settings UI) don't accidentally expose env keys to users.
+  getUserApiKey: (): string | null => {
+    const userKey = localStorage.getItem(KEYS.API_KEY);
+    return userKey ?? null;
+  },
+
   setApiKey: (key: string) => {
     localStorage.setItem(KEYS.API_KEY, key);
   },

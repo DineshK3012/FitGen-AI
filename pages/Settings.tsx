@@ -10,7 +10,10 @@ export const Settings: React.FC = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    const key = storageService.getApiKey();
+    // Only load the user-provided key into the Settings form.
+    // Do NOT call `getApiKey()` here because that falls back to the
+    // build-time env var and would leak it into the UI.
+    const key = storageService.getUserApiKey();
     if (key) setApiKey(key);
   }, []);
 
@@ -23,8 +26,8 @@ export const Settings: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
-      <button 
-        onClick={() => navigate('/')} 
+      <button
+        onClick={() => navigate('/')}
         className="flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-1" />
@@ -61,11 +64,10 @@ export const Settings: React.FC = () => {
 
           <button
             onClick={handleSave}
-            className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-colors ${
-              saved 
-                ? 'bg-green-600 hover:bg-green-700 text-white' 
-                : 'bg-indigo-600 hover:bg-indigo-700 text-white'
-            }`}
+            className={`w-full flex items-center justify-center gap-2 py-3 rounded-lg font-medium transition-colors ${saved
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+              }`}
           >
             {saved ? (
               <>Saved Successfully</>

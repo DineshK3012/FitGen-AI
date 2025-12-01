@@ -21,16 +21,16 @@ export const Home: React.FC = () => {
       <section className="relative min-h-[90vh] flex items-center justify-center overflow-hidden">
         {/* Background Overlay */}
         <div className="absolute inset-0 z-0">
-          <img 
-            src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop" 
-            className="w-full h-full object-cover opacity-20 dark:opacity-10" 
+          <img
+            src="https://images.unsplash.com/photo-1517836357463-d25dfeac3438?q=80&w=2070&auto=format&fit=crop"
+            className="w-full h-full object-cover opacity-20 dark:opacity-10"
             alt="Gym Background"
           />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-slate-50/80 to-slate-50 dark:via-slate-950/80 dark:to-slate-950"></div>
         </div>
 
         <div className="container mx-auto px-4 z-10 pt-20">
-          <motion.div 
+          <motion.div
             initial="hidden"
             animate="visible"
             variants={stagger}
@@ -41,25 +41,25 @@ export const Home: React.FC = () => {
                 AI-Powered Fitness Revolution
               </span>
             </motion.div>
-            
+
             <motion.h1 variants={fadeInUp} className="text-5xl md:text-7xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-8 leading-tight">
-              Transform Your Body <br/>
+              Transform Your Body <br />
               <span className="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">With Intelligent Design</span>
             </motion.h1>
-            
+
             <motion.p variants={fadeInUp} className="text-xl text-slate-600 dark:text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
               Experience the future of personal training. Custom-built workout routines and diet plans generated instantly by advanced AI, tailored specifically to your biology and goals.
             </motion.p>
-            
-            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4">
-              <button 
+
+            <motion.div variants={fadeInUp} className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+              <button
                 onClick={() => navigate('/create')}
                 className="w-full sm:w-auto px-8 py-4 bg-indigo-600 text-white rounded-xl font-bold text-lg hover:shadow-xl hover:shadow-indigo-500/30 hover:-translate-y-1 transition-all duration-300 flex items-center justify-center"
               >
                 Generate My Plan
                 <ArrowRight className="w-5 h-5 ml-2" />
               </button>
-              <button 
+              <button
                 onClick={() => navigate('/dashboard')}
                 className="w-full sm:w-auto px-8 py-4 bg-white dark:bg-slate-900 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-800 rounded-xl font-bold text-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-all flex items-center justify-center"
               >
@@ -105,7 +105,7 @@ export const Home: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <motion.div 
+            <motion.div
               whileHover={{ y: -10 }}
               className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
             >
@@ -118,7 +118,7 @@ export const Home: React.FC = () => {
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               whileHover={{ y: -10 }}
               className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
             >
@@ -131,7 +131,7 @@ export const Home: React.FC = () => {
               </p>
             </motion.div>
 
-            <motion.div 
+            <motion.div
               whileHover={{ y: -10 }}
               className="p-8 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm"
             >
@@ -151,10 +151,10 @@ export const Home: React.FC = () => {
       <section className="py-24 bg-white dark:bg-slate-900 overflow-hidden">
         <div className="container mx-auto px-4 flex flex-col md:flex-row items-center gap-12">
           <div className="md:w-1/2">
-             <span className="text-indigo-600 dark:text-indigo-400 font-semibold tracking-wider text-sm uppercase mb-2 block">Next-Gen Technology</span>
+            <span className="text-indigo-600 dark:text-indigo-400 font-semibold tracking-wider text-sm uppercase mb-2 block">Next-Gen Technology</span>
             <h2 className="text-4xl font-bold text-slate-900 dark:text-white mb-6">Visualize Your Progress</h2>
             <p className="text-slate-500 dark:text-slate-400 text-lg mb-8 leading-relaxed">
-              Unsure about an exercise form? Want to see how that high-protein meal should look? 
+              Unsure about an exercise form? Want to see how that high-protein meal should look?
               Our integrated generative AI creates visuals on demand, helping you execute your plan with confidence.
             </p>
             <ul className="space-y-4">
@@ -170,9 +170,9 @@ export const Home: React.FC = () => {
           </div>
           <div className="md:w-1/2 relative">
             <div className="absolute -inset-4 bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl opacity-30 blur-2xl animate-pulse"></div>
-            <img 
-              src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop" 
-              alt="Fitness Visualization" 
+            <img
+              src="https://images.unsplash.com/photo-1540497077202-7c8a3999166f?q=80&w=2070&auto=format&fit=crop"
+              alt="Fitness Visualization"
               className="relative rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-700 w-full object-cover transform rotate-2 hover:rotate-0 transition-all duration-500"
             />
           </div>
@@ -189,7 +189,7 @@ export const Home: React.FC = () => {
               <p className="text-indigo-100 text-lg max-w-2xl mx-auto mb-10">
                 Join thousands of users who have transformed their lives with our AI-driven approach. No credit card required to generate your first plan.
               </p>
-              <button 
+              <button
                 onClick={() => navigate('/create')}
                 className="bg-white text-indigo-600 hover:bg-indigo-50 px-10 py-4 rounded-xl font-bold text-lg transition-colors shadow-lg"
               >

@@ -19,7 +19,7 @@ export const AIImageEditor: React.FC<Props> = ({ initialPrompt, contextType, cur
   const [isExpanded, setIsExpanded] = useState(false);
   
   // Rate limit: 5 requests per minute for images
-  const { checkLimit } = useRateLimit('image_gen', { limit: 5, interval: 60000 });
+  const { checkLimit } = useRateLimit('image_gen', { limit: 1, interval: 60000 });
 
   useEffect(() => {
     setImageUrl(currentImageUrl);
