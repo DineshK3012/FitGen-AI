@@ -27,11 +27,11 @@ export const Settings: React.FC = () => {
   return (
     <div className="max-w-2xl mx-auto px-4 py-8">
       <button
-        onClick={() => navigate('/')}
+        onClick={() => navigate(-1)}
         className="flex items-center text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white mb-6 transition-colors"
       >
         <ArrowLeft className="w-4 h-4 mr-1" />
-        Back to Dashboard
+        Back
       </button>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 p-8 transition-colors">
