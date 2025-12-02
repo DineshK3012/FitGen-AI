@@ -10,19 +10,65 @@ const getClient = () => {
 
 const handleGeminiError = (error: any): never => {
   console.error("Gemini API Error:", error);
-  const msg = error?.message || '';
-  
-  if (msg.includes('429') || msg.includes('quota') || msg.includes('limit')) {
-    throw new Error("AI usage limit reached. Please try again in a few minutes.");
+
+  // Prefer structured error returned by the API
+  const apiErr = error?.error ?? error;
+  const rawMessage: string = apiErr?.message || apiErr?.error_description || error?.message || String(error);
+
+  // Try to extract retry info from details
+  let retrySeconds: number | undefined;
+  try {
+    const details = apiErr?.details || [];
+    for (const d of details) {
+      if (d['@type']?.includes('RetryInfo') && d.retryDelay) {
+        // retryDelay could be in the form '47s' or an object; try to parse seconds
+        const rd = d.retryDelay;
+        if (typeof rd === 'string') {
+          const m = rd.match(/(\d+(?:\.\d+)?)s/);
+          if (m) retrySeconds = Math.ceil(parseFloat(m[1]));
+        } else if (rd?.seconds) {
+          retrySeconds = Number(rd.seconds);
+        }
+        break;
+      }
+    }
+  } catch (e) {
+    // ignore
   }
-  if (msg.includes('API key')) {
-    throw new Error("Invalid API Key. Please check your settings.");
+
+  // If the message indicates quota/resource exhausted, surface useful details
+  if (/429|quota|limit|RESOURCE_EXHAUSTED/i.test(rawMessage)) {
+    // Try to extract quota failure entries for a more specific message
+    let quotaInfo: string[] = [];
+    try {
+      const details = apiErr?.details || [];
+      for (const d of details) {
+        if (d['@type']?.includes('QuotaFailure') && Array.isArray(d.violations)) {
+          for (const v of d.violations) {
+            const metric = v.quotaMetric || v.quotaId || JSON.stringify(v.quotaDimensions || {});
+            quotaInfo.push(String(metric));
+          }
+        }
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    const quotaMsg = quotaInfo.length ? ` Quota details: ${quotaInfo.join(', ')}.` : '';
+    const waitMsg = retrySeconds ? ` Please retry in ~${retrySeconds} seconds.` : '';
+    throw new Error(`AI usage limit reached.${quotaMsg}${waitMsg}`);
   }
+
+  if (/API key|invalid key|401|403/i.test(rawMessage)) {
+    throw new Error("Invalid or unauthorized API Key. Please check your settings and project billing/permissions.");
+  }
+
   if (error instanceof SyntaxError) {
     throw new Error("AI returned incomplete data. Please try again.");
   }
-  
-  throw new Error("Failed to connect to AI. Please try again.");
+
+  // Fallback
+  throw new Error(rawMessage || "Failed to connect to AI. Please try again.");
 };
 
 export const generateFitnessPlan = async (prefs: UserPreferences): Promise<FitnessPlan> => {
