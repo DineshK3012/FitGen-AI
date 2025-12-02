@@ -19,7 +19,7 @@ export const PlanViewer: React.FC = () => {
   const [activeDayIndex, setActiveDayIndex] = useState(0);
   const [loading, setLoading] = useState(true);
   const [generatedImages, setGeneratedImages] = useState<Record<string, string>>({});
-  
+
   const [playingText, setPlayingText] = useState<string | null>(null);
 
   // Substitution State
@@ -53,10 +53,10 @@ export const PlanViewer: React.FC = () => {
   }, []);
 
   const handleRegenerate = useCallback(() => {
-    if(plan?.preferences) {
-        navigate('/create', { state: { preferences: plan.preferences } });
+    if (plan?.preferences) {
+      navigate('/create', { state: { preferences: plan.preferences } });
     } else {
-        toast.error("No preferences found. Cannot regenerate.");
+      toast.error("No preferences found. Cannot regenerate.");
     }
   }, [plan, navigate]);
 
@@ -95,15 +95,15 @@ export const PlanViewer: React.FC = () => {
       window.speechSynthesis.cancel();
       const utterance = new SpeechSynthesisUtterance(text);
       utterance.rate = 1.0;
-      
+
       utterance.onend = () => setPlayingText(null);
       utterance.onerror = (e) => {
-          if (e.error !== 'interrupted' && e.error !== 'canceled') {
-              setPlayingText(null);
-              toast.error("Audio playback error");
-          }
+        if (e.error !== 'interrupted' && e.error !== 'canceled') {
+          setPlayingText(null);
+          toast.error("Audio playback error");
+        }
       };
-      
+
       setPlayingText(text);
       window.speechSynthesis.speak(utterance);
     }
@@ -178,102 +178,101 @@ export const PlanViewer: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 pb-20">
-      
+
       {/* --- PRINT LAYOUT --- */}
       <div className="hidden print:block bg-white text-black p-8 font-sans w-full max-w-[210mm] mx-auto print-avoid-break">
-         <div className="flex justify-between items-center mb-6 border-b-2 border-indigo-600 pb-4">
-             <div>
-                <h1 className="text-2xl font-bold text-slate-900">FitGen AI Plan</h1>
-             </div>
-             <div className="text-right">
-                <p className="text-lg font-bold">{plan.userName}</p>
-                <p className="text-sm text-slate-500">{plan.goal}</p>
-             </div>
-         </div>
-         <div className="mb-8">
-            <h2 className="text-xl font-bold text-indigo-700 mb-2">Nutrition Plan</h2>
-            <table className="w-full border-collapse text-xs">
-                <thead><tr className="bg-slate-100 border-b-2 border-slate-300 text-left"><th className="p-2 w-1/5">Meal</th><th className="p-2 w-1/4">Food</th><th className="p-2 w-1/3">Prep</th><th className="p-2">Macros</th></tr></thead>
-                <tbody>{plan.days.map(day => (<React.Fragment key={day.day}><tr><td colSpan={4} className="font-bold py-2 bg-slate-50 border-b border-slate-200 px-2 uppercase">{day.day}</td></tr>{day.meals.map(meal => (<tr key={meal.id} className="border-b border-slate-100"><td className="p-2 align-top font-bold">{meal.name} <span className="text-slate-500 font-normal">({meal.calories} kcal)</span></td><td className="p-2 align-top">{meal.ingredients.join(', ')}</td><td className="p-2 align-top"><ul className="list-disc list-inside">{Array.isArray(meal.recipe) && meal.recipe.map((step, i) => <li key={i}>{step}</li>)}</ul></td><td className="p-2 align-top font-mono">P:{meal.protein} C:{meal.carbs} F:{meal.fat}</td></tr>))}</React.Fragment>))}</tbody>
-            </table>
-         </div>
-         <div className="print-break"></div>
-         <div className="pt-4">
-            <h2 className="text-xl font-bold text-indigo-700 mb-2">Workout Routine</h2>
-             <table className="w-full border-collapse text-xs">
-                <thead><tr className="bg-slate-100 border-b-2 border-slate-300 text-left"><th className="p-2 w-1/4">Exercise</th><th className="p-2 w-1/6">Sets x Reps</th><th className="p-2 w-1/6">Rest</th><th className="p-2">Instructions</th></tr></thead>
-                <tbody>{plan.days.map(day => (<React.Fragment key={day.day}><tr><td colSpan={4} className="font-bold py-2 bg-slate-50 border-b border-slate-200 px-2 uppercase">{day.day}</td></tr>{day.workout.map(ex => (<tr key={ex.id} className="border-b border-slate-100"><td className="p-2 align-top font-bold">{ex.name}<div className="italic font-normal text-indigo-600 mt-1">{ex.notes}</div></td><td className="p-2 align-top">{ex.sets} x {ex.reps}</td><td className="p-2 align-top">{ex.rest}</td><td className="p-2 align-top"><ol className="list-decimal list-inside">{Array.isArray(ex.instructions) && ex.instructions.map((step, i) => <li key={i}>{step}</li>)}</ol></td></tr>))}</React.Fragment>))}</tbody>
-            </table>
-         </div>
+        <div className="flex justify-between items-center mb-6 border-b-2 border-indigo-600 pb-4">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">FitGen AI Plan</h1>
+          </div>
+          <div className="text-right">
+            <p className="text-lg font-bold">{plan.userName}</p>
+            <p className="text-sm text-slate-500">{plan.goal}</p>
+          </div>
+        </div>
+        <div className="mb-8">
+          <h2 className="text-xl font-bold text-indigo-700 mb-2">Nutrition Plan</h2>
+          <table className="w-full border-collapse text-xs">
+            <thead><tr className="bg-slate-100 border-b-2 border-slate-300 text-left"><th className="p-2 w-1/5">Meal</th><th className="p-2 w-1/4">Food</th><th className="p-2 w-1/3">Prep</th><th className="p-2">Macros</th></tr></thead>
+            <tbody>{plan.days.map(day => (<React.Fragment key={day.day}><tr><td colSpan={4} className="font-bold py-2 bg-slate-50 border-b border-slate-200 px-2 uppercase">{day.day}</td></tr>{day.meals.map(meal => (<tr key={meal.id} className="border-b border-slate-100"><td className="p-2 align-top font-bold">{meal.name} <span className="text-slate-500 font-normal">({meal.calories} kcal)</span></td><td className="p-2 align-top">{meal.ingredients.join(', ')}</td><td className="p-2 align-top"><ul className="list-disc list-inside">{Array.isArray(meal.recipe) && meal.recipe.map((step, i) => <li key={i}>{step}</li>)}</ul></td><td className="p-2 align-top font-mono">P:{meal.protein} C:{meal.carbs} F:{meal.fat}</td></tr>))}</React.Fragment>))}</tbody>
+          </table>
+        </div>
+        <div className="print-break"></div>
+        <div className="pt-4">
+          <h2 className="text-xl font-bold text-indigo-700 mb-2">Workout Routine</h2>
+          <table className="w-full border-collapse text-xs">
+            <thead><tr className="bg-slate-100 border-b-2 border-slate-300 text-left"><th className="p-2 w-1/4">Exercise</th><th className="p-2 w-1/6">Sets x Reps</th><th className="p-2 w-1/6">Rest</th><th className="p-2">Instructions</th></tr></thead>
+            <tbody>{plan.days.map(day => (<React.Fragment key={day.day}><tr><td colSpan={4} className="font-bold py-2 bg-slate-50 border-b border-slate-200 px-2 uppercase">{day.day}</td></tr>{day.workout.map(ex => (<tr key={ex.id} className="border-b border-slate-100"><td className="p-2 align-top font-bold">{ex.name}<div className="italic font-normal text-indigo-600 mt-1">{ex.notes}</div></td><td className="p-2 align-top">{ex.sets} x {ex.reps}</td><td className="p-2 align-top">{ex.rest}</td><td className="p-2 align-top"><ol className="list-decimal list-inside">{Array.isArray(ex.instructions) && ex.instructions.map((step, i) => <li key={i}>{step}</li>)}</ol></td></tr>))}</React.Fragment>))}</tbody>
+          </table>
+        </div>
       </div>
-      
+
       <div className="print:hidden">
         {isDraft && (
-            <div className="fixed bottom-6 right-6 z-50">
+          <div className="fixed bottom-6 right-6 z-50">
             <button onClick={handleSavePlan} className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-3 rounded-full font-bold shadow-2xl transition-transform hover:scale-105">
-                <Bookmark className="w-5 h-5" /> Save to Dashboard
+              <Bookmark className="w-5 h-5" /> Save to Dashboard
             </button>
-            </div>
+          </div>
         )}
 
         <div className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 sticky top-16 z-30">
-            <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="flex items-center gap-3"><button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" /></button><div><h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">{plan.goal}</h1><p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1"><User size={10} /> {plan.userName}</p></div></div>
-                <div className="flex gap-2 text-sm overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">{!isDraft && (<button onClick={handleDeleteClick} className="flex-shrink-0 flex items-center gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/10 px-3 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"><Trash2 size={14} /> Delete</button>)}<button onClick={handleRegenerate} className="flex-shrink-0 flex items-center gap-1.5 text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><RefreshCw size={14} /> Regenerate</button><button onClick={() => window.print()} className="flex-shrink-0 flex items-center gap-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-3 py-1.5 rounded-lg hover:opacity-90 transition-colors"><Printer size={14} /> Export PDF</button></div>
-            </div>
+          <div className="max-w-7xl mx-auto px-4 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3"><button onClick={() => navigate('/dashboard')} className="p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-full transition-colors"><ArrowLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" /></button><div><h1 className="text-lg font-bold text-slate-900 dark:text-white leading-none">{plan.goal}</h1><p className="text-xs text-slate-500 dark:text-slate-400 mt-1 flex items-center gap-1"><User size={10} /> {plan.userName}</p></div></div>
+            <div className="flex gap-2 text-sm overflow-x-auto pb-1 sm:pb-0 hide-scrollbar">{!isDraft && (<button onClick={handleDeleteClick} className="flex-shrink-0 flex items-center gap-1.5 text-red-600 bg-red-50 dark:bg-red-900/10 px-3 py-1.5 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"><Trash2 size={14} /> Delete</button>)}<button onClick={handleRegenerate} className="flex-shrink-0 flex items-center gap-1.5 text-slate-700 dark:text-slate-200 bg-slate-100 dark:bg-slate-800 px-3 py-1.5 rounded-lg hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"><RefreshCw size={14} /> Regenerate</button><button onClick={() => window.print()} className="flex-shrink-0 flex items-center gap-1.5 bg-slate-900 dark:bg-slate-100 text-white dark:text-slate-900 px-3 py-1.5 rounded-lg hover:opacity-90 transition-colors"><Printer size={14} /> Export PDF</button></div>
+          </div>
         </div>
 
         <div className="max-w-7xl mx-auto px-4 py-6">
-            <div className="flex overflow-x-auto gap-2 mb-8 pb-2 scrollbar-hide">
+          <div className="flex overflow-x-auto gap-2 mb-8 pb-2 scrollbar-hide">
             {plan.days.map((day, idx) => (
-                <button
+              <button
                 key={idx}
                 onClick={() => setActiveDayIndex(idx)}
-                className={`px-5 py-2.5 rounded-xl whitespace-nowrap text-sm font-semibold transition-all flex-shrink-0 border ${
-                    idx === activeDayIndex 
-                    ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/25' 
-                    : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-indigo-300'
-                }`}
-                >
+                className={`px-5 py-2.5 rounded-xl whitespace-nowrap text-sm font-semibold transition-all flex-shrink-0 border ${idx === activeDayIndex
+                  ? 'bg-indigo-600 text-white border-indigo-600 shadow-lg shadow-indigo-500/25'
+                  : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-800 hover:border-indigo-300'
+                  }`}
+              >
                 {day.day}
-                </button>
+              </button>
             ))}
-            </div>
+          </div>
 
-            <div className="grid lg:grid-cols-2 gap-8 animate-in fade-in" key={activeDayIndex}>
-                <div className="space-y-6">
-                    <div className="flex items-center gap-3"><div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400"><Dumbbell className="w-5 h-5" /></div><h2 className="text-xl font-bold">Workout</h2></div>
-                    {isRestDay ? (
-                      <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-800"><div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto mb-4"><Zap className="w-6 h-6" /></div><h3 className="font-bold text-lg">Rest & Recover</h3><p className="text-sm text-slate-500 mt-1">{activeDay.workout[0]?.notes || "A day for your muscles to repair and grow stronger."}</p></div>
-                    ) : (
-                      activeDay.workout?.map((exercise) => {
-                        const instructionText = Array.isArray(exercise.instructions) ? exercise.instructions.join('. ') : (exercise.instructions || '');
-                        const textToSpeak = `${exercise.name}. ${instructionText} Tip: ${exercise.notes}`;
-                        const isThisPlaying = playingText === textToSpeak;
-                        return (
-                            <div key={exercise.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden group">
-                                <div className="p-5 border-b border-slate-100 dark:border-slate-800"><div className="flex justify-between items-start mb-3"><h3 className="font-bold text-lg text-slate-900 dark:text-white">{exercise.name}</h3><div className="flex gap-2"><button onClick={() => handleSpeak(textToSpeak)} className={`p-1.5 rounded-full border transition-colors ${isThisPlaying ? 'bg-indigo-100 text-indigo-600 border-indigo-200' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>{isThisPlaying ? <Square size={14} fill="currentColor" /> : <Volume2 size={14} />}</button><button onClick={() => openSubModal(exercise.id, exercise.name, 'Exercise')} className="p-1.5 rounded-full border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"><Shuffle size={14} /></button></div></div><div className="flex flex-wrap gap-2 text-xs font-semibold"><span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center"><Clock size={12} className="mr-1"/> {exercise.rest} rest</span><span className="bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">{exercise.sets} sets × {exercise.reps}</span></div></div>
-                                <div className="p-5 space-y-4"><div><div className="flex items-center gap-1.5 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wide"><Info size={12} /> Steps</div>{renderInstructions(exercise.instructions)}</div><div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 p-3 rounded-lg text-sm text-slate-700 dark:text-slate-300 italic"><span className="font-bold text-amber-600 not-italic mr-1">Tip:</span> {exercise.notes}</div><AIImageEditor initialPrompt={`Fitness photo of ${exercise.name} exercise, perfect form, gym setting`} contextType="Exercise" currentImageUrl={generatedImages[exercise.id]} onImageUpdate={(url) => handleUpdateImage(exercise.id, url)} /></div>
-                            </div>
-                        );
-                      })
-                    )}
-                </div>
-                <div className="space-y-6">
-                    <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400"><Utensils className="w-5 h-5" /></div><h2 className="text-xl font-bold text-slate-900 dark:text-white">Nutrition</h2></div><div className="hidden sm:flex gap-3 text-xs font-bold bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"><div className="flex flex-col items-center px-2 border-r border-slate-100 dark:border-slate-700"><span className="text-slate-400 uppercase text-[10px]">Cals</span><span className="text-slate-900 dark:text-white">{dailyMacros.calories}</span></div><div className="flex flex-col items-center px-2 border-r border-slate-100 dark:border-slate-700"><span className="text-slate-400 uppercase text-[10px]">Prot</span><span className="text-emerald-600">{dailyMacros.protein}g</span></div><div className="flex flex-col items-center px-2 border-r border-slate-100 dark:border-slate-700"><span className="text-slate-400 uppercase text-[10px]">Carb</span><span className="text-amber-600">{dailyMacros.carbs}g</span></div><div className="flex flex-col items-center px-2"><span className="text-slate-400 uppercase text-[10px]">Fat</span><span className="text-rose-600">{dailyMacros.fat}g</span></div></div></div>
-                    {activeDay.meals?.map((meal) => {
-                        const recipeText = Array.isArray(meal.recipe) ? meal.recipe.join('. ') : (meal.recipe || '');
-                        const textToSpeak = `${meal.name}. Ingredients: ${meal.ingredients.join(', ')}. Instructions: ${recipeText}`;
-                        const isThisPlaying = playingText === textToSpeak;
-                        return (
-                            <div key={meal.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden group">
-                                <div className="p-5 border-b border-slate-100 dark:border-slate-800"><div className="flex justify-between items-start mb-3"><h3 className="font-bold text-lg text-slate-900 dark:text-white">{meal.name}</h3><div className="flex gap-2"><button onClick={() => handleSpeak(textToSpeak)} className={`p-1.5 rounded-full border transition-colors ${isThisPlaying ? 'bg-emerald-100 text-emerald-600 border-emerald-200' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>{isThisPlaying ? <Square size={14} fill="currentColor" /> : <Volume2 size={14} />}</button><button onClick={() => openSubModal(meal.id, meal.name, 'Meal')} className="p-1.5 rounded-full border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"><Shuffle size={14} /></button></div></div><div className="flex items-center text-xs font-bold text-orange-600 bg-orange-50 dark:bg-orange-900/20 px-2.5 py-1 rounded-md border border-orange-100 dark:border-orange-900/30 w-fit"><Flame size={12} className="mr-1" /> {meal.calories} kcal</div><div className="grid grid-cols-3 gap-2 mt-3"><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Beef size={10}/> Pro</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.protein}g</div></div><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Wheat size={10}/> Carb</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.carbs}g</div></div><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Droplet size={10}/> Fat</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.fat}g</div></div></div></div>
-                                <div className="p-5 space-y-4"><div><div className="text-xs font-bold text-slate-400 uppercase mb-2">Ingredients</div><div className="flex flex-wrap gap-1.5">{meal.ingredients.map((ing, i) => (<span key={i} className="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">{ing}</span>))}</div></div><div><div className="text-xs font-bold text-slate-400 uppercase mb-2">Prep</div>{renderInstructions(meal.recipe)}</div><AIImageEditor initialPrompt={`Delicious food photo of ${meal.name}, gourmet plating`} contextType="Meal" currentImageUrl={generatedImages[meal.id]} onImageUpdate={(url) => handleUpdateImage(meal.id, url)} /></div>
-                            </div>
-                        );
-                    })}
-                </div>
+          <div className="grid lg:grid-cols-2 gap-8 animate-in fade-in" key={activeDayIndex}>
+            <div className="space-y-6">
+              <div className="flex items-center gap-3"><div className="p-2 bg-indigo-100 dark:bg-indigo-900/30 rounded-lg text-indigo-600 dark:text-indigo-400"><Dumbbell className="w-5 h-5" /></div><h2 className="text-xl font-bold">Workout</h2></div>
+              {isRestDay ? (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-800"><div className="w-12 h-12 bg-indigo-50 dark:bg-indigo-900/20 text-indigo-500 dark:text-indigo-400 rounded-xl flex items-center justify-center mx-auto mb-4"><Zap className="w-6 h-6" /></div><h3 className="font-bold text-lg">Rest & Recover</h3><p className="text-sm text-slate-500 mt-1">{activeDay.workout[0]?.notes || "A day for your muscles to repair and grow stronger."}</p></div>
+              ) : (
+                activeDay.workout?.map((exercise) => {
+                  const instructionText = Array.isArray(exercise.instructions) ? exercise.instructions.join('. ') : (exercise.instructions || '');
+                  const textToSpeak = `${exercise.name}. ${instructionText} Tip: ${exercise.notes}`;
+                  const isThisPlaying = playingText === textToSpeak;
+                  return (
+                    <div key={exercise.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden group">
+                      <div className="p-5 border-b border-slate-100 dark:border-slate-800"><div className="flex justify-between items-start mb-3"><h3 className="font-bold text-lg text-slate-900 dark:text-white">{exercise.name}</h3><div className="flex gap-2"><button onClick={() => handleSpeak(textToSpeak)} className={`p-1.5 rounded-full border transition-colors ${isThisPlaying ? 'bg-indigo-100 text-indigo-600 border-indigo-200' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>{isThisPlaying ? <Square size={14} fill="currentColor" /> : <Volume2 size={14} />}</button><button onClick={() => openSubModal(exercise.id, exercise.name, 'Exercise')} className="p-1.5 rounded-full border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"><Shuffle size={14} /></button></div></div><div className="flex flex-wrap gap-2 text-xs font-semibold"><span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center"><Clock size={12} className="mr-1" /> {exercise.rest} rest</span><span className="bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">{exercise.sets} sets × {exercise.reps}</span></div></div>
+                      <div className="p-5 space-y-4"><div><div className="flex items-center gap-1.5 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wide"><Info size={12} /> Steps</div>{renderInstructions(exercise.instructions)}</div><div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 p-3 rounded-lg text-sm text-slate-700 dark:text-slate-300 italic"><span className="font-bold text-amber-600 not-italic mr-1">Tip:</span> {exercise.notes}</div><AIImageEditor initialPrompt={`Fitness photo of ${exercise.name} exercise, perfect form, gym setting`} contextType="Exercise" currentImageUrl={generatedImages[exercise.id]} onImageUpdate={(url) => handleUpdateImage(exercise.id, url)} /></div>
+                    </div>
+                  );
+                })
+              )}
             </div>
+            <div className="space-y-6">
+              <div className="flex items-center justify-between"><div className="flex items-center gap-3"><div className="p-2 bg-emerald-100 dark:bg-emerald-900/30 rounded-lg text-emerald-600 dark:text-emerald-400"><Utensils className="w-5 h-5" /></div><h2 className="text-xl font-bold text-slate-900 dark:text-white">Nutrition</h2></div><div className="hidden sm:flex gap-3 text-xs font-bold bg-white dark:bg-slate-800 p-2 rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm"><div className="flex flex-col items-center px-2 border-r border-slate-100 dark:border-slate-700"><span className="text-slate-400 uppercase text-[10px]">Cals</span><span className="text-slate-900 dark:text-white">{dailyMacros.calories}</span></div><div className="flex flex-col items-center px-2 border-r border-slate-100 dark:border-slate-700"><span className="text-slate-400 uppercase text-[10px]">Prot</span><span className="text-emerald-600">{dailyMacros.protein}g</span></div><div className="flex flex-col items-center px-2 border-r border-slate-100 dark:border-slate-700"><span className="text-slate-400 uppercase text-[10px]">Carb</span><span className="text-amber-600">{dailyMacros.carbs}g</span></div><div className="flex flex-col items-center px-2"><span className="text-slate-400 uppercase text-[10px]">Fat</span><span className="text-rose-600">{dailyMacros.fat}g</span></div></div></div>
+              {activeDay.meals?.map((meal) => {
+                const recipeText = Array.isArray(meal.recipe) ? meal.recipe.join('. ') : (meal.recipe || '');
+                const textToSpeak = `${meal.name}. Ingredients: ${meal.ingredients.join(', ')}. Instructions: ${recipeText}`;
+                const isThisPlaying = playingText === textToSpeak;
+                return (
+                  <div key={meal.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden group">
+                    <div className="p-5 border-b border-slate-100 dark:border-slate-800"><div className="flex justify-between items-start mb-3"><h3 className="font-bold text-lg text-slate-900 dark:text-white">{meal.name}</h3><div className="flex gap-2"><button onClick={() => handleSpeak(textToSpeak)} className={`p-1.5 rounded-full border transition-colors ${isThisPlaying ? 'bg-emerald-100 text-emerald-600 border-emerald-200' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>{isThisPlaying ? <Square size={14} fill="currentColor" /> : <Volume2 size={14} />}</button><button onClick={() => openSubModal(meal.id, meal.name, 'Meal')} className="p-1.5 rounded-full border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"><Shuffle size={14} /></button></div></div><div className="flex items-center text-xs font-bold text-orange-600 bg-orange-50 dark:bg-orange-900/20 px-2.5 py-1 rounded-md border border-orange-100 dark:border-orange-900/30 w-fit"><Flame size={12} className="mr-1" /> {meal.calories} kcal</div><div className="grid grid-cols-3 gap-2 mt-3"><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Beef size={10} /> Pro</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.protein}g</div></div><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Wheat size={10} /> Carb</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.carbs}g</div></div><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Droplet size={10} /> Fat</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.fat}g</div></div></div></div>
+                    <div className="p-5 space-y-4"><div><div className="text-xs font-bold text-slate-400 uppercase mb-2">Ingredients</div><div className="flex flex-wrap gap-1.5">{meal.ingredients.map((ing, i) => (<span key={i} className="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">{ing}</span>))}</div></div><div><div className="text-xs font-bold text-slate-400 uppercase mb-2">Prep</div>{renderInstructions(meal.recipe)}</div><AIImageEditor initialPrompt={`Delicious food photo of ${meal.name}, gourmet plating`} contextType="Meal" currentImageUrl={generatedImages[meal.id]} onImageUpdate={(url) => handleUpdateImage(meal.id, url)} /></div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
         <ConfirmModal isOpen={showDeleteModal} onClose={() => setShowDeleteModal(false)} onConfirm={confirmDelete} title="Delete Plan" message="Are you sure you want to permanently delete this plan?" isDestructive={true} />

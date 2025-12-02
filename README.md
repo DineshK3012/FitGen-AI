@@ -2,7 +2,7 @@
 
 FitGen AI is a modern, AI-powered web application designed to be your personal fitness and nutrition assistant. It leverages the power of Google's Gemini API to generate highly personalized workout routines and diet plans tailored to your specific goals, preferences, and physical attributes.
 
-![FitGen AI Screenshot](https://i.imgur.com/example.png) <!-- Replace with an actual screenshot URL -->
+![FitGen AI Screenshot](./public/assets/homepage_screenshot.png)
 
 ---
 
@@ -52,22 +52,30 @@ To run this project locally, follow these steps:
     - **Option 1 (Recommended)**: Launch the application and navigate to the **Settings** page. Paste your API key into the input field and save. The key will be stored in your browser's local storage.
     - **Option 2 (For Development)**: You can set up a fallback key. Create a `.env` file in the project root and add the following line:
       ```
-      API_KEY=your_gemini_api_key_here
+      VITE_GEMINI_API_KEY=your_gemini_api_key_here
       ```
       The application is coded to use the key from Settings first, and fall back to this environment variable if no user-provided key is found.
 
 4.  **Install dependencies and run the development server**:
-    This project is set up to run in an environment that supports ES modules directly in the browser. You can use a simple static server.
-    ```bash
-    # If you have Node.js, you can use 'serve'
-    npm install -g serve
-    serve .
+    This project uses Node.js + Vite. From the project root run:
 
-    # Or use Python's built-in server
-    python -m http.server
+    ```powershell
+    # Install dependencies
+    npm install
+
+    # Start the dev server (Vite)
+    npm run dev
     ```
 
-5.  Open your browser and navigate to `http://localhost:3000` (or the port provided by your server).
+    - The dev server will print the local URL (usually `http://localhost:3000`).
+    - To create a production build:
+
+    ```powershell
+    npm run build
+
+    # Preview the production build locally
+    npm run preview
+    ```
 
 ---
 
