@@ -71,6 +71,12 @@ export interface AlternativeOption {
   data: any; // structured data (Partial<Exercise> or Partial<Meal>)
 }
 
+export interface VideoResult {
+  title: string;
+  videoId: string;
+  description?: string;
+}
+
 export enum LoadingState {
   IDLE = 'IDLE',
   LOADING = 'LOADING',

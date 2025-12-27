@@ -1,5 +1,5 @@
 import { GoogleGenAI, Type } from "@google/genai";
-import { UserPreferences, FitnessPlan, AlternativeOption } from "../types";
+import { UserPreferences, FitnessPlan, AlternativeOption, VideoResult } from "../types";
 import { storageService } from './storageService';
 
 const getClient = () => {
@@ -73,7 +73,7 @@ const handleGeminiError = (error: any): never => {
 
 export const generateFitnessPlan = async (prefs: UserPreferences): Promise<FitnessPlan> => {
   const ai = getClient();
-  
+
   const prompt = `
     Create a comprehensive 7-DAY JSON fitness plan for:
     - User: ${prefs.name}, Goal: ${prefs.goal}, Level: ${prefs.level}.
@@ -125,13 +125,13 @@ export const generateFitnessPlan = async (prefs: UserPreferences): Promise<Fitne
     text = text.replace(/^```json\s*/, '').replace(/^```\s*/, '').replace(/\s*```$/, '');
 
     const data = JSON.parse(text);
-    
+
     return {
       id: crypto.randomUUID(),
       createdAt: Date.now(),
       goal: prefs.goal,
       duration: `${prefs.workoutDays.length} Days/Week`,
-      preferences: prefs, 
+      preferences: prefs,
       ...data
     };
   } catch (error) {
@@ -140,12 +140,12 @@ export const generateFitnessPlan = async (prefs: UserPreferences): Promise<Fitne
 };
 
 export const getAlternatives = async (
-  itemName: string, 
-  type: 'Exercise' | 'Meal', 
+  itemName: string,
+  type: 'Exercise' | 'Meal',
   constraint: string
 ): Promise<AlternativeOption[]> => {
   const ai = getClient();
-  
+
   const prompt = `
     Substitute ${type}: "${itemName}". Issue: "${constraint}".
     Provide 3 alternatives.
@@ -204,7 +204,7 @@ export const editImage = async (base64Image: string, editInstruction: string): P
   const ai = getClient();
   try {
     const matches = base64Image.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
-    
+
     let mimeType = 'image/png';
     let data = base64Image;
 
@@ -236,6 +236,68 @@ export const editImage = async (base64Image: string, editInstruction: string): P
   }
 };
 
+export const searchYouTubeVideos = async (query: string): Promise<VideoResult[]> => {
+  const ai = getClient();
+
+  const prompt = `
+    Find 3 distinct, high-quality YouTube tutorial videos for: "${query}".
+    
+    Instructions:
+    1. Look for specific, high-quality, PUBLIC tutorial videos.
+    2. Provide the 'title' and the 11-character 'videoId'.
+    3. Ensure the videos are likely to be embeddable (standard tutorials, not Shorts if possible).
+    4. If search fails, use your knowledge to provide the ID of a CLASSIC, POPULAR video for this topic that you are confident exists.
+    5. Return ONLY a valid JSON array.
+
+    Structure:
+    [
+      { "title": "Video Title", "videoId": "VIDEO_ID_HERE" }
+    ]
+  `;
+
+  try {
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        tools: [{ googleSearch: {} }]
+        // responseMimeType: "application/json" // Unsupported with tools
+      }
+    });
+
+    const text = response.text || "[]";
+    // Remove any potential markdown block markers
+    const cleanText = text.replace(/```json|```/g, '').trim();
+
+    let results: VideoResult[] = [];
+    try {
+      results = JSON.parse(cleanText);
+    } catch (parseError) {
+      console.error("Failed to parse Gemini video results:", text);
+      // Try to find a JSON array pattern in the text if simple parse fails
+      const match = cleanText.match(/\[.*\]/s);
+      if (match) {
+        try {
+          results = JSON.parse(match[0]);
+        } catch (e) { /* ignore */ }
+      }
+    }
+
+    // Filter for valid video IDs and minimal cleanup
+    return results.map(v => ({
+      ...v,
+      videoId: v.videoId.trim()
+    })).filter(v =>
+      v.videoId &&
+      typeof v.videoId === 'string' &&
+      /^[a-zA-Z0-9_-]{11}$/.test(v.videoId)
+    );
+
+  } catch (error) {
+    return handleGeminiError(error);
+  }
+};
+
 export const getDemoPlan = (): FitnessPlan => {
   return {
     id: 'demo-plan-123',
@@ -246,10 +308,10 @@ export const getDemoPlan = (): FitnessPlan => {
     summary: 'A balanced routine for muscle gain with a full weekly diet.',
     totalCalories: 2600,
     preferences: {
-        name: 'Demo User', age: 25, gender: 'Male', weight: 75, height: 180,
-        goal: 'Muscle Gain', level: 'Intermediate', equipment: 'Gym',
-        diet: 'None', workoutDays: ['Monday', 'Wednesday', 'Friday'], injuries: 'None', allergies: 'None', medications: 'None', remarks: 'None',
-        mealsPerDay: 4, cheatDay: 'Sunday'
+      name: 'Demo User', age: 25, gender: 'Male', weight: 75, height: 180,
+      goal: 'Muscle Gain', level: 'Intermediate', equipment: 'Gym',
+      diet: 'None', workoutDays: ['Monday', 'Wednesday', 'Friday'], injuries: 'None', allergies: 'None', medications: 'None', remarks: 'None',
+      mealsPerDay: 4, cheatDay: 'Sunday'
     },
     days: [
       {
@@ -268,7 +330,7 @@ export const getDemoPlan = (): FitnessPlan => {
           { id: 'm1_tue', name: 'Grilled Chicken Salad', calories: 500, protein: 40, carbs: 20, fat: 25, ingredients: ['Chicken Breast', 'Greens'], recipe: ['Grill chicken.', 'Serve over greens.'], imageUrl: '' }
         ]
       },
-       {
+      {
         day: 'Wednesday',
         workout: [
           { id: 'w1_wed', name: 'Bench Press', sets: '3', reps: '10', rest: '90s', notes: 'Control the bar.', instructions: ['Lower bar to chest.', 'Press back up.'], imageUrl: '' }
@@ -277,7 +339,7 @@ export const getDemoPlan = (): FitnessPlan => {
           { id: 'm1_wed', name: 'Salmon and Quinoa', calories: 600, protein: 45, carbs: 50, fat: 20, ingredients: ['Salmon', 'Quinoa'], recipe: ['Bake salmon.', 'Cook quinoa.'], imageUrl: '' }
         ]
       },
-       {
+      {
         day: 'Thursday',
         workout: [{ id: 'w1_thu', name: 'Active Recovery', sets: 'N/A', reps: '30 min', rest: 'N/A', notes: 'Light cardio.', instructions: ['Go for a brisk walk or a light jog.'] }],
         meals: [
@@ -300,7 +362,7 @@ export const getDemoPlan = (): FitnessPlan => {
           { id: 'm1_sat', name: 'Chicken Wraps', calories: 500, protein: 35, carbs: 40, fat: 20, ingredients: ['Chicken', 'Tortilla'], recipe: ['Assemble ingredients in wrap.'], imageUrl: '' }
         ]
       },
-       {
+      {
         day: 'Sunday',
         workout: [{ id: 'w1_sun', name: 'Rest Day', sets: 'N/A', reps: 'N/A', rest: 'N/A', notes: 'Prepare for the week.', instructions: ['Relax and hydrate.'] }],
         meals: [

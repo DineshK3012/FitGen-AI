@@ -3,7 +3,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { FitnessPlan, AlternativeOption, Meal, Exercise } from '../types';
 import { storageService } from '../services/storageService';
 import { getAlternatives } from '../services/geminiService';
-import { AIImageEditor } from '../components/AIImageEditor';
+import { VisualAidManager } from '../components/VisualAidManager';
 import { ArrowLeft, Clock, Flame, Dumbbell, Utensils, Printer, RefreshCw, Save, Shuffle, Volume2, X, Loader2, User, Info, Square, Trash2, Droplet, Wheat, Beef, Bookmark, Zap } from 'lucide-react';
 import { useRateLimit } from '../hooks/useRateLimit';
 import { toast } from 'sonner';
@@ -252,7 +252,16 @@ export const PlanViewer: React.FC = () => {
                   return (
                     <div key={exercise.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden group">
                       <div className="p-5 border-b border-slate-100 dark:border-slate-800"><div className="flex justify-between items-start mb-3"><h3 className="font-bold text-lg text-slate-900 dark:text-white">{exercise.name}</h3><div className="flex gap-2"><button onClick={() => handleSpeak(textToSpeak)} className={`p-1.5 rounded-full border transition-colors ${isThisPlaying ? 'bg-indigo-100 text-indigo-600 border-indigo-200' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>{isThisPlaying ? <Square size={14} fill="currentColor" /> : <Volume2 size={14} />}</button><button onClick={() => openSubModal(exercise.id, exercise.name, 'Exercise')} className="p-1.5 rounded-full border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"><Shuffle size={14} /></button></div></div><div className="flex flex-wrap gap-2 text-xs font-semibold"><span className="bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 flex items-center"><Clock size={12} className="mr-1" /> {exercise.rest} rest</span><span className="bg-indigo-50 dark:bg-indigo-900/20 px-2 py-1 rounded text-indigo-700 dark:text-indigo-300 border border-indigo-100 dark:border-indigo-800">{exercise.sets} sets × {exercise.reps}</span></div></div>
-                      <div className="p-5 space-y-4"><div><div className="flex items-center gap-1.5 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wide"><Info size={12} /> Steps</div>{renderInstructions(exercise.instructions)}</div><div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 p-3 rounded-lg text-sm text-slate-700 dark:text-slate-300 italic"><span className="font-bold text-amber-600 not-italic mr-1">Tip:</span> {exercise.notes}</div><AIImageEditor initialPrompt={`Fitness photo of ${exercise.name} exercise, perfect form, gym setting`} contextType="Exercise" currentImageUrl={generatedImages[exercise.id]} onImageUpdate={(url) => handleUpdateImage(exercise.id, url)} /></div>
+                      <div className="p-5 space-y-4">
+                        <div><div className="flex items-center gap-1.5 mb-2 text-xs font-bold text-slate-400 uppercase tracking-wide"><Info size={12} /> Steps</div>{renderInstructions(exercise.instructions)}</div>
+                        <div className="bg-amber-50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/20 p-3 rounded-lg text-sm text-slate-700 dark:text-slate-300 italic"><span className="font-bold text-amber-600 not-italic mr-1">Tip:</span> {exercise.notes}</div>
+                        <VisualAidManager
+                          initialPrompt={`${exercise.name} exercise, perfect form, gym setting`}
+                          contextType="Exercise"
+                          currentImageUrl={generatedImages[exercise.id]}
+                          onImageUpdate={(url) => handleUpdateImage(exercise.id, url)}
+                        />
+                      </div>
                     </div>
                   );
                 })
@@ -267,7 +276,16 @@ export const PlanViewer: React.FC = () => {
                 return (
                   <div key={meal.id} className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-800 overflow-hidden group">
                     <div className="p-5 border-b border-slate-100 dark:border-slate-800"><div className="flex justify-between items-start mb-3"><h3 className="font-bold text-lg text-slate-900 dark:text-white">{meal.name}</h3><div className="flex gap-2"><button onClick={() => handleSpeak(textToSpeak)} className={`p-1.5 rounded-full border transition-colors ${isThisPlaying ? 'bg-emerald-100 text-emerald-600 border-emerald-200' : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'}`}>{isThisPlaying ? <Square size={14} fill="currentColor" /> : <Volume2 size={14} />}</button><button onClick={() => openSubModal(meal.id, meal.name, 'Meal')} className="p-1.5 rounded-full border border-slate-200 bg-slate-50 text-slate-500 hover:bg-slate-100"><Shuffle size={14} /></button></div></div><div className="flex items-center text-xs font-bold text-orange-600 bg-orange-50 dark:bg-orange-900/20 px-2.5 py-1 rounded-md border border-orange-100 dark:border-orange-900/30 w-fit"><Flame size={12} className="mr-1" /> {meal.calories} kcal</div><div className="grid grid-cols-3 gap-2 mt-3"><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Beef size={10} /> Pro</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.protein}g</div></div><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Wheat size={10} /> Carb</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.carbs}g</div></div><div className="bg-slate-50 dark:bg-slate-800 p-1.5 rounded text-center border border-slate-100 dark:border-slate-700"><div className="text-[10px] text-slate-400 uppercase font-bold flex items-center justify-center gap-1"><Droplet size={10} /> Fat</div><div className="font-bold text-slate-700 dark:text-slate-200 text-xs">{meal.fat}g</div></div></div></div>
-                    <div className="p-5 space-y-4"><div><div className="text-xs font-bold text-slate-400 uppercase mb-2">Ingredients</div><div className="flex flex-wrap gap-1.5">{meal.ingredients.map((ing, i) => (<span key={i} className="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">{ing}</span>))}</div></div><div><div className="text-xs font-bold text-slate-400 uppercase mb-2">Prep</div>{renderInstructions(meal.recipe)}</div><AIImageEditor initialPrompt={`Delicious food photo of ${meal.name}, gourmet plating`} contextType="Meal" currentImageUrl={generatedImages[meal.id]} onImageUpdate={(url) => handleUpdateImage(meal.id, url)} /></div>
+                    <div className="p-5 space-y-4">
+                      <div><div className="text-xs font-bold text-slate-400 uppercase mb-2">Ingredients</div><div className="flex flex-wrap gap-1.5">{meal.ingredients.map((ing, i) => (<span key={i} className="text-xs font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 px-2 py-1 rounded border border-slate-200 dark:border-slate-700">{ing}</span>))}</div></div>
+                      <div><div className="text-xs font-bold text-slate-400 uppercase mb-2">Prep</div>{renderInstructions(meal.recipe)}</div>
+                      <VisualAidManager
+                        initialPrompt={`${meal.name}, gourmet plating`}
+                        contextType="Meal"
+                        currentImageUrl={generatedImages[meal.id]}
+                        onImageUpdate={(url) => handleUpdateImage(meal.id, url)}
+                      />
+                    </div>
                   </div>
                 );
               })}
